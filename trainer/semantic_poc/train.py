@@ -147,5 +147,7 @@ def pick_thresholds(probs: np.ndarray, y_all: np.ndarray, intents: list[str],
                 break
         if best == 2.0:
             print(f"  {intent}: floor {precision_floor} unattainable on policy split")
-        thresholds[intent] = round(best, 6)
+        # Full precision: rounding down would accept turns just below the exact
+        # cut the precision estimate was computed at (floor violation).
+        thresholds[intent] = best
     return thresholds

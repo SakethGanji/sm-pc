@@ -3,6 +3,7 @@ The Go server loads exactly one of these; any parameter change = new artifact.""
 
 import hashlib
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -30,7 +31,9 @@ def _git_sha() -> str:
 def export(models: Trained, families: dict[str, str], policy_cfg: dict,
            eval_summary: dict, fixtures: list[dict]) -> Path:
     tmp = ARTIFACTS_DIR / "artifact-tmp"
-    tmp.mkdir(parents=True, exist_ok=True)
+    if tmp.exists():
+        shutil.rmtree(tmp)  # stale files from a crashed export must not ship
+    tmp.mkdir(parents=True)
 
     for attr, fname in NPY_FILES.items():
         np.save(tmp / fname, getattr(models, attr).astype(np.float64))

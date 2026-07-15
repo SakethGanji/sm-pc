@@ -43,3 +43,9 @@ def test_exclusive_group_keeps_argmax():
 def test_cap_and_overflow_flag():
     r = d({"a": 0.95, "b": 0.9, "c": 0.9, "d": 0.8}, max_accepted=3)
     assert len(r["intents"]) == 3 and r["overflow"] is True
+
+
+def test_equal_probabilities_tie_break_by_name():
+    # Same rule as the Go implementation: prob desc, then name asc.
+    r = d({"d": 0.92, "b": 0.92, "a": 0.92, "c": 0.1})
+    assert [i["name"] for i in r["intents"]] == ["a", "b", "d"]

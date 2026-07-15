@@ -31,7 +31,9 @@ def terms_of(text: str, ngram_max: int = 2) -> list[str]:
 class TfIdf:
     def __init__(self, vocab: dict[str, int], idf: np.ndarray):
         self.vocab = vocab
-        self.idf = idf.astype(np.float32)
+        # float64 end-to-end: the Go server computes in float64 and the parity
+        # tolerance (1e-9) is tighter than float32 rounding (~1e-8 relative).
+        self.idf = idf.astype(np.float64)
 
     @classmethod
     def fit(cls, docs: list[str], min_df: int = 2, max_vocab: int = 200000) -> "TfIdf":
@@ -44,7 +46,7 @@ class TfIdf:
         kept.sort()  # deterministic, order-independent vocab indices
         vocab = {t: i for i, t in enumerate(kept)}
         n = len(docs)
-        idf = np.array([np.log((1 + n) / (1 + df[t])) + 1 for t in kept], dtype=np.float32)
+        idf = np.array([np.log((1 + n) / (1 + df[t])) + 1 for t in kept], dtype=np.float64)
         return cls(vocab, idf)
 
     def transform(self, docs: list[str]) -> sparse.csr_matrix:
@@ -62,6 +64,6 @@ class TfIdf:
                 data.append(row[j] / norm)
             indptr.append(len(indices))
         return sparse.csr_matrix(
-            (np.array(data, dtype=np.float32), indices, indptr),
+            (np.array(data, dtype=np.float64), indices, indptr),
             shape=(len(docs), len(self.vocab)),
         )

@@ -67,6 +67,7 @@ func (h *Handler) Classify(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) classify(ctx context.Context, req *Request, t0 time.Time) *Response {
 	resp := &Response{
+		Intents:               []policy.Intent{}, // §5.2: a list, never null
 		ModelVersion:          h.Art.Version,
 		EmbeddingModelVersion: h.Art.Manifest.Embedding.Model,
 	}
@@ -81,6 +82,11 @@ func (h *Handler) classify(ctx context.Context, req *Request, t0 time.Time) *Res
 	if st.Stitched {
 		idx := st.SupersedesIndex
 		resp.SupersedesTurnIndex = &idx
+		// §6.1: log originals, stitched text, gap, rule fired; ASR confidence
+		// is logged here, never gating.
+		log.Printf("stitched conv=%s turn=%d rule=%s gap_ms=%d asr_conf=%.2f prev=%q cur=%q -> %q",
+			req.ConversationID, req.TurnIndex, st.RuleFired, st.GapMs, req.AsrConfidence,
+			req.PreviousCustomerSegment.Text, req.CurrentCustomerTranscript, st.Text)
 	}
 	resp.LatencyMs.Stitch = time.Since(t0).Milliseconds()
 
@@ -128,7 +134,9 @@ func (h *Handler) classify(ctx context.Context, req *Request, t0 time.Time) *Res
 	resp.LatencyMs.Fusion = time.Since(tf).Milliseconds()
 
 	resp.Decision = result.Decision
-	resp.Intents = result.Intents
+	if result.Intents != nil {
+		resp.Intents = result.Intents
+	}
 	if result.Overflow {
 		log.Printf("accepted-cap overflow conv=%s turn=%d", req.ConversationID, req.TurnIndex)
 	}

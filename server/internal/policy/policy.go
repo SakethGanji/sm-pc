@@ -57,7 +57,15 @@ func Decide(probs, thresholds map[string]float64, families map[string]string,
 	for i := range cands {
 		ordered = append(ordered, i)
 	}
-	sort.Slice(ordered, func(x, y int) bool { return cands[ordered[x]] > cands[ordered[y]] })
+	// Tie-break by name so Go and Python order identically on equal probabilities
+	// (map iteration order is random and sort.Slice is unstable).
+	sort.Slice(ordered, func(x, y int) bool {
+		a, b := ordered[x], ordered[y]
+		if cands[a] != cands[b] {
+			return cands[a] > cands[b]
+		}
+		return a < b
+	})
 	overflow := len(ordered) > maxAccepted
 	if overflow {
 		ordered = ordered[:maxAccepted]

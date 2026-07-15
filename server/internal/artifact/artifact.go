@@ -109,11 +109,51 @@ func Load(dir string) (*Artifact, error) {
 	if a.Idf, err = npy.ReadVector(filepath.Join(dir, "tfidf_idf.npy")); err != nil {
 		return nil, err
 	}
-	k := len(a.Model.Intents)
-	if len(a.SemCoef) != k || len(a.LexCoef) != k || len(a.FusCoef) != k {
-		return nil, fmt.Errorf("artifact %s: coefficient rows do not match %d intents", dir, k)
+	if err := a.validate(); err != nil {
+		return nil, fmt.Errorf("artifact %s: %w", dir, err)
 	}
 	return a, nil
+}
+
+// validate checks the cross-language boundary: a field the trainer failed to
+// emit must fail loudly here, not become a Go zero value (e.g. a missing
+// threshold would silently accept everything at p >= 0).
+func (a *Artifact) validate() error {
+	k := len(a.Model.Intents)
+	if k == 0 {
+		return fmt.Errorf("no intents in model.json")
+	}
+	if len(a.SemCoef) != k || len(a.LexCoef) != k || len(a.FusCoef) != k {
+		return fmt.Errorf("coefficient rows do not match %d intents", k)
+	}
+	if len(a.SemInt) != k || len(a.LexInt) != k || len(a.FusInt) != k {
+		return fmt.Errorf("intercept lengths do not match %d intents", k)
+	}
+	if len(a.Model.PlattA) != k || len(a.Model.PlattB) != k {
+		return fmt.Errorf("platt parameter lengths do not match %d intents", k)
+	}
+	for _, intent := range a.Model.Intents {
+		if _, ok := a.Model.Thresholds[intent]; !ok {
+			return fmt.Errorf("missing threshold for intent %q", intent)
+		}
+		if _, ok := a.Model.Families[intent]; !ok {
+			return fmt.Errorf("missing family for intent %q", intent)
+		}
+	}
+	if len(a.Idf) != len(a.Vocab) {
+		return fmt.Errorf("idf length %d != vocab size %d", len(a.Idf), len(a.Vocab))
+	}
+	if len(a.SemCoef[0]) != a.Manifest.Embedding.OutputDim {
+		return fmt.Errorf("semantic coef width %d != embedding dim %d",
+			len(a.SemCoef[0]), a.Manifest.Embedding.OutputDim)
+	}
+	if len(a.LexCoef[0]) != len(a.Vocab) {
+		return fmt.Errorf("lexical coef width %d != vocab size %d", len(a.LexCoef[0]), len(a.Vocab))
+	}
+	if want := 2*k + 2; len(a.FusCoef[0]) != want { // sem ⊕ lex ⊕ meta(2)
+		return fmt.Errorf("fusion coef width %d != %d", len(a.FusCoef[0]), want)
+	}
+	return nil
 }
 
 // Newest returns the lexically-last artifact-* directory under root.

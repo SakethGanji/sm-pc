@@ -54,3 +54,15 @@ func TestCapAndOverflow(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+
+func TestEqualProbabilitiesTieBreakByName(t *testing.T) {
+	// Same rule as the Python implementation: prob desc, then name asc. Run
+	// repeatedly so random map iteration order cannot hide nondeterminism.
+	for range 50 {
+		r := run(map[string]float64{"a": 0.92, "b": 0.92, "d": 0.92, "c": 0.1}, nil)
+		got := []string{r.Intents[0].Name, r.Intents[1].Name, r.Intents[2].Name}
+		if got[0] != "a" || got[1] != "b" || got[2] != "d" {
+			t.Fatalf("tie order not deterministic: %v", got)
+		}
+	}
+}

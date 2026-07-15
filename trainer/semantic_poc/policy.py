@@ -19,7 +19,8 @@ def decide(
             for i in members:
                 if i != keep:
                     del cands[i]
-    ordered = sorted(cands, key=lambda i: -cands[i])
+    # Tie-break by name so Python and Go order identically on equal probabilities.
+    ordered = sorted(cands, key=lambda i: (-cands[i], i))
     overflow = len(ordered) > max_accepted
     ordered = ordered[:max_accepted]
 

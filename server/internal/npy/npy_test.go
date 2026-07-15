@@ -48,3 +48,29 @@ func TestReadMatrixAndVector(t *testing.T) {
 		t.Fatalf("%v", v)
 	}
 }
+
+func TestRejectsUnsupportedVersionAndTruncation(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "x.npy")
+	writeNpy(t, path, "(3,)", []float64{1, 2, 3})
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	v2 := append([]byte(nil), b...)
+	v2[6] = 2 // v2.0 uses a 4-byte header length — must not be parsed as v1
+	if err := os.WriteFile(path, v2, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Read(path); err == nil {
+		t.Fatal("expected error for npy version 2.0")
+	}
+
+	if err := os.WriteFile(path, b[:12], 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Read(path); err == nil {
+		t.Fatal("expected error for truncated header")
+	}
+}

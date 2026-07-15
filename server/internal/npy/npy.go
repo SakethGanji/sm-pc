@@ -23,7 +23,13 @@ func Read(path string) ([]float64, []int, error) {
 	if len(b) < 10 || string(b[:6]) != "\x93NUMPY" {
 		return nil, nil, fmt.Errorf("%s: not an npy file", path)
 	}
+	if b[6] != 1 { // v2/v3 use a 4-byte header length; only v1.0 is supported
+		return nil, nil, fmt.Errorf("%s: unsupported npy version %d.%d", path, b[6], b[7])
+	}
 	headerLen := int(binary.LittleEndian.Uint16(b[8:10]))
+	if len(b) < 10+headerLen {
+		return nil, nil, fmt.Errorf("%s: truncated header", path)
+	}
 	header := string(b[10 : 10+headerLen])
 	if !strings.Contains(header, "'<f8'") || strings.Contains(header, "'fortran_order': True") {
 		return nil, nil, fmt.Errorf("%s: unsupported npy header %q", path, header)
