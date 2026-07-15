@@ -16,6 +16,13 @@ ORDER = ["train", "calibration", "policy", "test"]
 
 
 def assign_splits(rows: list[GoldRow]) -> dict:
+    # Synthetic rows are train-only by construction; they never enter the
+    # time ordering and can never reach calibration/policy/test.
+    synth = [r for r in rows if r.conversation_id.startswith("synth-")]
+    for r in synth:
+        r.split = "train"
+    rows = [r for r in rows if not r.conversation_id.startswith("synth-")]
+
     conv_ts: dict[str, int] = {}
     for r in rows:
         conv_ts[r.conversation_id] = min(r.timestamp_ms, conv_ts.get(r.conversation_id, 1 << 62))
@@ -40,6 +47,7 @@ def assign_splits(rows: list[GoldRow]) -> dict:
         "conversations": {name: sum(1 for c in convs if split_of[c] == name) for name in ORDER},
         "rows": dict(Counter(r.split for r in rows)),
         "labeled_rows": dict(Counter(r.split for r in rows if r.labels)),
+        "synthetic_train_rows": len(synth),
         "test_rows_sha256": hashlib.sha256(test_payload).hexdigest(),
     }
     return manifest
