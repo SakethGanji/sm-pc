@@ -1,0 +1,35 @@
+# =============================================================================
+# DECISION POLICY + CERTIFICATION KNOBS.
+# Copy to configs/policy.yaml. Every value here is a governance/safety choice —
+# set the safety ones (precision_floor, accept_floor) BEFORE you see results.
+# =============================================================================
+
+# The safety bar. "An accepted suggestion must be right at least this often."
+# Precommit this before any model result exists (playbook §6). 0.90 is a common
+# starting point; raise it for higher-stakes actions.
+precision_floor: 0.90
+
+# Absolute minimum calibrated probability to EVER accept an intent. Guards
+# against a perfectly-separable intent certifying a near-zero threshold that
+# would then accept out-of-distribution garbage (we hit this live in the
+# rehearsal — a mangled non-request cleared a ~4e-8 cut and false-fired). Keep
+# ~0.50. Raising a threshold only increases precision, so this never breaks the
+# floor above. Leave this on from day one.
+accept_floor: 0.50
+
+# If the single best calibrated probability across ALL intents is below this and
+# nothing was accepted, emit `no_supported_intent` ("nothing relevant"); at or
+# above it, emit `abstained` ("something's here but I'm not sure"). Tunes the
+# split between the two silent outcomes.
+tau_low: 0.30
+
+# Max intents to accept on one turn (multi-intent turns exist but are rare).
+max_accepted: 3
+
+# TODO 1: Exclusive groups — within each listed group, only the single
+# highest-scoring intent may fire (prevents two confusable siblings both firing).
+# THIS IS WHERE HIERARCHY EARNS ITS KEEP at 50 intents: list each family's
+# fine-grained siblings together. Empty list = mechanism off.
+exclusive_groups: []
+  # - [replace_card, unlock_card, activate_card, dispute_charge]   # card actions
+  # - [transfer_money, pay_bill]                                   # money movement

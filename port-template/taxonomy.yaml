@@ -1,0 +1,47 @@
+# =============================================================================
+# TAXONOMY — your label space + the main-intent (family) hierarchy.
+# Copy to configs/taxonomy.yaml and replace the contents with YOUR intents.
+# This single file defines: (a) every intent the model can output, and (b) which
+# family each rolls up to (used for the family-level fallback in the decision
+# policy — see playbook §8/§9.1).
+# =============================================================================
+
+# TODO 1: List every intent, grouped conceptually by family. The KEY is the
+# intent name the model emits (snake_case, stable — changing it means a new
+# artifact). `family` is the coarse bucket for hierarchy + fallback.
+#
+# Guidance for ~50 intents:
+#  - Keep family names small in number (a handful), intents many.
+#  - Put genuinely-confusable siblings in the SAME family (e.g. all card actions),
+#    then list them in exclusive_groups in policy.yaml so only one fires per turn.
+#  - Start by shipping only the intents you can CERTIFY (enough labeled positives);
+#    add the rare tail later. It's fine for this file to list more than you serve —
+#    an intent with an unattainable threshold simply never accepts.
+intents:
+  # ---- family: card_services ----
+  replace_card:        {family: card_services}
+  # unlock_card:       {family: card_services}     # example fine-grained sibling
+  # activate_card:     {family: card_services}
+  # dispute_charge:    {family: card_services}
+  order_checks:        {family: card_services}
+
+  # ---- family: money_movement ----
+  transfer_money:      {family: money_movement}
+  pay_bill:            {family: money_movement}
+
+  # ---- family: account_access ----
+  check_balance:       {family: account_access}
+  reset_password:      {family: account_access}
+
+  # ---- family: branch_services ----
+  schedule_appointment: {family: branch_services}
+  get_branch_hours:     {family: branch_services}
+
+  # ... your remaining intents / families ...
+
+# TODO 2 (optional): If your raw data carries coarse call-reason codes, map them
+# here to seed session_task_intent during ingest. WEAK hint only — never a label.
+# If unused, delete this block (ingest passes "" instead).
+reason_code_map: {}
+  # "CARD_REPLACE_v2": replace_card
+  # "BILLPAY":         pay_bill

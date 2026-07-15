@@ -106,7 +106,8 @@ def train() -> None:
     pol = splits["policy"]
     probs = sigmoid(models.platt_a * fused_logits(models, pol) + models.platt_b)
     models.thresholds = pick_thresholds(probs, pol.y, intents,
-                                        policy_cfg["precision_floor"])
+                                        policy_cfg["precision_floor"],
+                                        policy_cfg.get("accept_floor", 0.0))
 
     eval_summary = {"per_intent": {}}
     for k, intent in enumerate(intents):

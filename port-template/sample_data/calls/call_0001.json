@@ -1,0 +1,7 @@
+[
+  {"speaker": "agent",    "asr_text": "hello this is harper valley national bank my name is john how can i help you today", "human_text": "hello this is harper valley national bank my name is john how can i help you today", "start_ms": 1000,  "duration_ms": 3200, "tags": ["greeting"]},
+  {"speaker": "customer", "asr_text": "hi my name is mary smith",                                                         "human_text": "hi my name is mary smith",                                                         "start_ms": 4500,  "duration_ms": 1500, "tags": ["greeting"]},
+  {"speaker": "customer", "asr_text": "i lost my debit cart can you send me a new one",                                   "human_text": "i lost my debit card can you send me a new one",                                   "start_ms": 6200,  "duration_ms": 2600, "tags": []},
+  {"speaker": "agent",    "asr_text": "sure i can help with that can i get your account number",                          "human_text": "sure i can help with that can i get your account number",                          "start_ms": 9000,  "duration_ms": 2400, "tags": ["data_question"]},
+  {"speaker": "customer", "asr_text": "yes it is one two three four five",                                                "human_text": "yes it is one two three four five",                                                "start_ms": 11600, "duration_ms": 1800, "tags": ["data_response"]}
+]

@@ -1,0 +1,7 @@
+[
+  {"speaker": "agent",    "asr_text": "harper valley national bank how can i help you",                     "human_text": "harper valley national bank how can i help you",                     "start_ms": 500,   "duration_ms": 2000, "tags": ["greeting"]},
+  {"speaker": "customer", "asr_text": "yea so uh things have been rough but anyway",                        "human_text": "yeah so uh things have been rough but anyway",                        "start_ms": 3000,  "duration_ms": 2200, "tags": []},
+  {"speaker": "customer", "asr_text": "i would like to transfer money between my accounts",                "human_text": "i would like to transfer money between my accounts",                "start_ms": 5400,  "duration_ms": 2500, "tags": []},
+  {"speaker": "agent",    "asr_text": "of course from which account",                                       "human_text": "of course from which account",                                       "start_ms": 8100,  "duration_ms": 1600, "tags": ["data_question"]},
+  {"speaker": "customer", "asr_text": "from my savings",                                                    "human_text": "from my savings",                                                    "start_ms": 9900,  "duration_ms": 1200, "tags": ["data_response"]}
+]

@@ -1,5 +1,11 @@
 # §6.9 decision policy + precommitted precision floor (set before results seen).
 precision_floor: 0.90  # per-intent minimum precision; thresholds chosen to meet it
+# Absolute minimum calibrated probability to ever accept an intent. Guards
+# against degenerate near-zero certified thresholds when a clean corpus makes an
+# intent perfectly separable (the precision floor alone can sit at ~0, which
+# would accept out-of-distribution garbage). Raising a threshold only increases
+# precision, so this never violates the precision floor.
+accept_floor: 0.50
 tau_low: 0.30          # max calibrated p below this and nothing accepted -> no_supported_intent
 max_accepted: 3
 # Exclusive groups: within a group keep only the argmax candidate.

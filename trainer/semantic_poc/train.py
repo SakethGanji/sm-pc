@@ -133,9 +133,12 @@ def fit_platt(fused: np.ndarray, y_all: np.ndarray, intents: list[str]):
 
 
 def pick_thresholds(probs: np.ndarray, y_all: np.ndarray, intents: list[str],
-                    precision_floor: float) -> dict[str, float]:
+                    precision_floor: float, accept_floor: float = 0.0) -> dict[str, float]:
     """Smallest threshold whose point-estimate precision on the policy split
-    meets the floor (maximizes coverage subject to the floor)."""
+    meets the floor (maximizes coverage subject to the floor), then clamped up to
+    accept_floor so a perfectly-separable intent can't certify a near-zero cut
+    that would accept out-of-distribution garbage. Clamping up only raises
+    precision, so it never breaks the precision floor."""
     thresholds = {}
     for k, intent in enumerate(intents):
         p, y = probs[:, k], y_all[:, k]
@@ -147,6 +150,10 @@ def pick_thresholds(probs: np.ndarray, y_all: np.ndarray, intents: list[str],
                 break
         if best == 2.0:
             print(f"  {intent}: floor {precision_floor} unattainable on policy split")
+        elif best < accept_floor:
+            print(f"  {intent}: certified cut {best:.3g} below accept_floor "
+                  f"{accept_floor} — clamped up (robustness guard)")
+            best = accept_floor
         # Full precision: rounding down would accept turns just below the exact
         # cut the precision estimate was computed at (floor violation).
         thresholds[intent] = best
