@@ -149,5 +149,103 @@ def partition() -> None:
     typer.echo(json.dumps(manifest, indent=2))
 
 
+@app.command()
+def replay(url: str = "http://localhost:8080", n_conversations: int = 5) -> None:
+    """Stream test-split conversations through the running Go server and
+    compare its decisions with the Python offline forward pass."""
+    import urllib.request
+    from datetime import datetime, timezone
+
+    import numpy as np
+
+    from .artifact import NPY_FILES
+    from .context import build_c1
+    from .embeddings import GeminiEmbedder
+    from .features import TfIdf
+    from .paths import ARTIFACTS_DIR
+    from .runtime import Scorer
+
+    art_dirs = sorted(ARTIFACTS_DIR.glob("artifact-*"))
+    if not art_dirs:
+        typer.echo("no artifact — run `poc train` first")
+        raise typer.Exit(1)
+    art = art_dirs[-1]
+    model = json.loads((art / "model.json").read_text())
+    vocab = json.loads((art / "tfidf_vocab.json").read_text())
+    mats = {a: np.load(art / f) for a, f in NPY_FILES.items()}
+    scorer = Scorer(
+        intents=model["intents"], families=model["families"],
+        tfidf=TfIdf(vocab, np.load(art / "tfidf_idf.npy")),
+        sem_coef=mats["sem_coef"], sem_int=mats["sem_int"],
+        lex_coef=mats["lex_coef"], lex_int=mats["lex_int"],
+        fus_coef=mats["fus_coef"], fus_int=mats["fus_int"],
+        platt_a=np.array(model["platt_a"]), platt_b=np.array(model["platt_b"]),
+        thresholds=model["thresholds"], tau_low=model["tau_low"],
+        max_accepted=model["max_accepted"],
+        exclusive_groups=model["exclusive_groups"],
+    )
+    embedder = GeminiEmbedder(load_config("embedding"))
+
+    rows = [r for r in load_gold() if r.split == "test"]
+    convs: dict[str, list] = {}
+    for r in rows:
+        convs.setdefault(r.conversation_id, []).append(r)
+
+    mismatches = total = 0
+    for cid in list(convs)[:n_conversations]:
+        turns = sorted(convs[cid], key=lambda r: r.turn_index)
+        decisions: dict[int, str] = {}
+        for r in turns:
+            prev_seg = None
+            if r.prev_caller_segment is not None:
+                p = r.prev_caller_segment
+                prev_seg = {
+                    "text": p.text, "turn_index": p.turn_index,
+                    "end_ts_ms": r.timestamp_ms - p.gap_ms,
+                    "decision": decisions.get(p.turn_index, "abstained"),
+                }
+            req = {
+                "conversation_id": cid,
+                "turn_index": r.turn_index,
+                "timestamp": datetime.fromtimestamp(
+                    r.timestamp_ms / 1000, tz=timezone.utc
+                ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
+                "current_customer_transcript": r.raw_transcript,
+                "previous_agent_utterance": r.previous_agent_utterance,
+                "previous_customer_segment": prev_seg,
+                "asr_confidence": 0.9,
+                "asr_is_final": True,
+            }
+            body = json.dumps(req).encode()
+            http_req = urllib.request.Request(
+                f"{url}/classify", data=body,
+                headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(http_req, timeout=15) as resp:
+                got = json.loads(resp.read())
+            decisions[r.turn_index] = got["decision"]
+            total += 1
+
+            # Offline comparison scores the same text the server classified.
+            offline_text = r.raw_transcript
+            if got.get("stitched") and prev_seg:
+                offline_text = f"{prev_seg['text']} {r.raw_transcript}"
+            emb = embedder.embed(
+                [build_c1(r.previous_agent_utterance, offline_text)])[0]
+            off = scorer.forward(offline_text, r.previous_agent_utterance,
+                                 emb.astype(np.float64))
+            match = off["decision"] == got["decision"] and \
+                [i["name"] for i in off["intents"]] == [i["name"] for i in got["intents"] or []]
+            if not match:
+                mismatches += 1
+                typer.echo(f"MISMATCH {cid}#{r.turn_index}: "
+                           f"server={got['decision']} offline={off['decision']}")
+            flag = "*stitched" if got.get("stitched") else ""
+            names = ",".join(i["name"] for i in got["intents"] or []) or "-"
+            typer.echo(f"  {cid[:8]}#{r.turn_index:3d} {got['decision']:20s} "
+                       f"{names:22s} {got['latency_ms']['total']:4d}ms {flag} "
+                       f"| {r.raw_transcript[:50]}")
+    typer.echo(f"\nreplayed {total} turns, {mismatches} offline/online mismatches")
+
+
 if __name__ == "__main__":
     app()
