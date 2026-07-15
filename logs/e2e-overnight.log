@@ -1,0 +1,272 @@
+2026-07-15T05:10:56-05:00 probe 1: HTTP 429
+2026-07-15T05:25:29-05:00 probe 1: HTTP 429
+2026-07-15T05:40:51-05:00 probe 1 key=...QGpGRA: HTTP 200
+2026-07-15T05:40:51-05:00 quota live on key ...QGpGRA — starting e2e
+=== [1/5] train (embeds via Gemini, cache-first) ===
+rows: train=6054 cal=1621 policy=1809 (ambiguous excluded)
+fitting TF-IDF on train ...
+vocab size: 1504
+embedding splits (cache-first, Gemini for misses) ...
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 100, model: gemini-embedding-1.0\nPlease retry in 6.961343473s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_free_tier_requests', 'quotaId': 'EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '100'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '6s'}]}}
+embed retry in 4s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 100, model: gemini-embedding-1.0\nPlease retry in 4.76040836s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_free_tier_requests', 'quotaId': 'EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '100'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '4s'}]}}
+embed retry in 8s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 100, model: gemini-embedding-1.0\nPlease retry in 642.910028ms.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_free_tier_requests', 'quotaId': 'EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '100'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '0s'}]}}
+embed retry in 16s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 100, model: gemini-embedding-1.0\nPlease retry in 52.489906288s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_free_tier_requests', 'quotaId': 'EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '100'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '52s'}]}}
+embed retry in 32s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 1000, model: gemini-embedding-1.0\nPlease retry in 36.136572297s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_free_tier_requests', 'quotaId': 'EmbedContentRequestsPerDayPerUserPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '1000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '36s'}]}}
+Traceback (most recent call last):
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/bin/poc", line 10, in <module>
+    sys.exit(app())
+             ^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/main.py", line 1154, in __call__
+    raise e
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/main.py", line 1137, in __call__
+    return get_command(self)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/_click/core.py", line 807, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/core.py", line 1193, in main
+    return _main(
+           ^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/core.py", line 183, in _main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/core.py", line 1115, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/_click/core.py", line 746, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/_click/core.py", line 489, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/typer/main.py", line 1515, in wrapper
+    return callback(**use_params)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/semantic_poc/cli.py", line 86, in train
+    splits = {name: build_split(rs, intents, tfidf, embedder) for name, rs in parts.items()}
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/semantic_poc/train.py", line 34, in build_split
+    X_sem = embedder.embed(texts_c1, progress=True).astype(np.float64)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/semantic_poc/embeddings.py", line 78, in embed
+    fetched = self._fetch_batch([t for _, t in batch])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/semantic_poc/embeddings.py", line 44, in _fetch_batch
+    resp = self._client.models.embed_content(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/models.py", line 6401, in embed_content
+    return self._embed_content(model=model, contents=contents, config=config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/models.py", line 5206, in _embed_content
+    response = self._api_client.request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/_api_client.py", line 1650, in request
+    response = self._request(http_request, http_options, stream=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/_api_client.py", line 1443, in _request
+    return self._retry(self._request_once, http_request, stream)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/_api_client.py", line 1420, in _request_once
+    errors.APIError.raise_for_response(response)
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/errors.py", line 155, in raise_for_response
+    cls.raise_error(response.status_code, response_json, response)
+  File "/home/saketh/Projects/playground/work/semantic-poc/trainer/.venv/lib/python3.12/site-packages/google/genai/errors.py", line 184, in raise_error
+    raise ClientError(status_code, response_json, response)
+google.genai.errors.ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_free_tier_requests, limit: 1000, model: gemini-embedding-1.0\nPlease retry in 3.882717015s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_free_tier_requests', 'quotaId': 'EmbedContentRequestsPerDayPerUserPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '1000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '3s'}]}}
+=== [1/5] train (embeds via Gemini, cache-first) ===
+rows: train=6054 cal=1621 policy=1809 (ambiguous excluded)
+fitting TF-IDF on train ...
+vocab size: 1504
+embedding splits (cache-first, Gemini for misses) ...
+embedded 100/3851 new texts
+embedded 200/3851 new texts
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. ', 'status': 'RESOURCE_EXHAUSTED'}}
+embedded 300/3851 new texts
+embedded 400/3851 new texts
+embedded 500/3851 new texts
+embedded 600/3851 new texts
+embedded 700/3851 new texts
+embedded 800/3851 new texts
+embedded 900/3851 new texts
+embedded 1000/3851 new texts
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}
+embedded 1100/3851 new texts
+embedded 1200/3851 new texts
+embedded 1300/3851 new texts
+embedded 1400/3851 new texts
+embedded 1500/3851 new texts
+embedded 1600/3851 new texts
+embedded 1700/3851 new texts
+embedded 1800/3851 new texts
+embedded 1900/3851 new texts
+embedded 2000/3851 new texts
+embedded 2100/3851 new texts
+embedded 2200/3851 new texts
+embedded 2300/3851 new texts
+embedded 2400/3851 new texts
+embedded 2500/3851 new texts
+embedded 2600/3851 new texts
+embedded 2700/3851 new texts
+embedded 2800/3851 new texts
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_paid_tier_requests, limit: 3000, model: gemini-embedding-1.0\nPlease retry in 52.883735099s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_paid_tier_requests', 'quotaId': 'EmbedContentPerMinutePerProjectPerUserPerModel-PaidTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '3000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '52s'}]}}
+embedded 2900/3851 new texts
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}
+embedded 3000/3851 new texts
+embedded 3100/3851 new texts
+embedded 3200/3851 new texts
+embedded 3300/3851 new texts
+embedded 3400/3851 new texts
+embedded 3500/3851 new texts
+embedded 3600/3851 new texts
+embedded 3700/3851 new texts
+embedded 3800/3851 new texts
+embedded 3851/3851 new texts
+embedded 100/1195 new texts
+embedded 200/1195 new texts
+embedded 300/1195 new texts
+embedded 400/1195 new texts
+embedded 500/1195 new texts
+embedded 600/1195 new texts
+embedded 700/1195 new texts
+embedded 800/1195 new texts
+embedded 900/1195 new texts
+embedded 1000/1195 new texts
+embedded 1100/1195 new texts
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.', 'status': 'RESOURCE_EXHAUSTED'}}
+embedded 1195/1195 new texts
+embedded 100/1334 new texts
+embedded 200/1334 new texts
+embedded 300/1334 new texts
+embedded 400/1334 new texts
+embedded 500/1334 new texts
+embed retry in 2s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_paid_tier_requests, limit: 3000, model: gemini-embedding-1.0\nPlease retry in 13.756144703s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_paid_tier_requests', 'quotaId': 'EmbedContentPerMinutePerProjectPerUserPerModel-PaidTier', 'quotaDimensions': {'model': 'gemini-embedding-1.0', 'location': 'global'}, 'quotaValue': '3000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '13s'}]}}
+embed retry in 4s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_paid_tier_requests, limit: 3000, model: gemini-embedding-1.0\nPlease retry in 11.650727424s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_paid_tier_requests', 'quotaId': 'EmbedContentPerMinutePerProjectPerUserPerModel-PaidTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '3000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '11s'}]}}
+embed retry in 8s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_paid_tier_requests, limit: 3000, model: gemini-embedding-1.0\nPlease retry in 7.541205748s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_paid_tier_requests', 'quotaId': 'EmbedContentPerMinutePerProjectPerUserPerModel-PaidTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-embedding-1.0'}, 'quotaValue': '3000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '7s'}]}}
+embed retry in 16s: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/embed_content_paid_tier_requests, limit: 3000, model: gemini-embedding-1.0\nPlease retry in 59.368150261s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/embed_content_paid_tier_requests', 'quotaId': 'EmbedContentPerMinutePerProjectPerUserPerModel-PaidTier', 'quotaDimensions': {'model': 'gemini-embedding-1.0', 'location': 'global'}, 'quotaValue': '3000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '59s'}]}}
+embedded 600/1334 new texts
+embedded 700/1334 new texts
+embedded 800/1334 new texts
+embedded 900/1334 new texts
+embedded 1000/1334 new texts
+embedded 1100/1334 new texts
+embedded 1200/1334 new texts
+embedded 1300/1334 new texts
+embedded 1334/1334 new texts
+semantic branch: per-intent C sweep on conversation-grouped folds
+  replace_card           C=1.0  oof_ap=0.690
+  order_checks           C=0.25 oof_ap=0.619
+  transfer_money         C=4.0  oof_ap=0.548
+  pay_bill               C=4.0  oof_ap=0.618
+  check_balance          C=1.0  oof_ap=0.676
+  reset_password         C=0.25 oof_ap=0.686
+  schedule_appointment   C=0.25 oof_ap=0.620
+  get_branch_hours       C=4.0  oof_ap=0.394
+lexical branch: per-intent C sweep
+  replace_card           C=4.0  oof_ap=0.657
+  order_checks           C=0.25 oof_ap=0.660
+  transfer_money         C=1.0  oof_ap=0.548
+  pay_bill               C=4.0  oof_ap=0.661
+  check_balance          C=0.25 oof_ap=0.699
+  reset_password         C=0.25 oof_ap=0.668
+  schedule_appointment   C=1.0  oof_ap=0.603
+  get_branch_hours       C=1.0  oof_ap=0.341
+fusion on out-of-fold logits; branches retrained on full train
+Platt calibration on calibration split
+thresholds on policy split
+{
+ "per_intent": {
+  "replace_card": {
+   "threshold": 0.8621054523250804,
+   "accepted": 1,
+   "precision": 1.0,
+   "recall": 0.0333,
+   "positives_in_policy": 30
+  },
+  "order_checks": {
+   "threshold": 0.8556719745095215,
+   "accepted": 2,
+   "precision": 1.0,
+   "recall": 0.0741,
+   "positives_in_policy": 27
+  },
+  "transfer_money": {
+   "threshold": 0.8120890722060143,
+   "accepted": 2,
+   "precision": 1.0,
+   "recall": 0.1818,
+   "positives_in_policy": 11
+  },
+  "pay_bill": {
+   "threshold": 0.6161768312804983,
+   "accepted": 11,
+   "precision": 0.9091,
+   "recall": 0.4,
+   "positives_in_policy": 25
+  },
+  "check_balance": {
+   "threshold": 0.8908242470522935,
+   "accepted": 1,
+   "precision": 1.0,
+   "recall": 0.0345,
+   "positives_in_policy": 29
+  },
+  "reset_password": {
+   "threshold": 0.7504793591739455,
+   "accepted": 2,
+   "precision": 1.0,
+   "recall": 0.1,
+   "positives_in_policy": 20
+  },
+  "schedule_appointment": {
+   "threshold": 0.8128264284283037,
+   "accepted": 4,
+   "precision": 1.0,
+   "recall": 0.1667,
+   "positives_in_policy": 24
+  },
+  "get_branch_hours": {
+   "threshold": 0.7747523743946769,
+   "accepted": 1,
+   "precision": 1.0,
+   "recall": 0.0556,
+   "positives_in_policy": 18
+  }
+ }
+}
+artifact: /home/saketh/Projects/playground/work/semantic-poc/artifacts/artifact-poc-hvb-001-d2b66a9e
+=== [2/5] trainer unit tests ===
+..............                                                           [100%]
+14 passed in 0.18s
+=== [3/5] Go tests incl. Python<->Go parity ===
+?   	semantic-poc/server/cmd/serve	[no test files]
+?   	semantic-poc/server/internal/api	[no test files]
+ok  	semantic-poc/server/internal/artifact	(cached)
+?   	semantic-poc/server/internal/embedding	[no test files]
+ok  	semantic-poc/server/internal/features	(cached)
+?   	semantic-poc/server/internal/model	[no test files]
+ok  	semantic-poc/server/internal/npy	(cached)
+ok  	semantic-poc/server/internal/parity	(cached)
+ok  	semantic-poc/server/internal/policy	(cached)
+ok  	semantic-poc/server/internal/stitch	(cached)
+=== [4/5] serve ===
+2026/07/15 10:38:15 no artifacts under ../artifacts

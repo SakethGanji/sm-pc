@@ -13,11 +13,14 @@ echo "=== [2/5] trainer unit tests ==="
 (cd trainer && uv run pytest -q)
 
 echo "=== [3/5] Go tests incl. Python<->Go parity ==="
-(cd server && go test ./...)
+# -count=1: the parity test reads the artifact from disk; Go's test cache
+# cannot see that dependency and would replay a stale skip/pass.
+(cd server && go test -count=1 ./...)
 
 echo "=== [4/5] serve ==="
 (cd server && go build -o bin/serve ./cmd/serve)
-server/bin/serve -addr :8080 &
+ARTIFACT_DIR=$(ls -d artifacts/artifact-* | sort | tail -1)
+server/bin/serve -addr :8080 -artifact "$ARTIFACT_DIR" &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
 for _ in $(seq 1 40); do
