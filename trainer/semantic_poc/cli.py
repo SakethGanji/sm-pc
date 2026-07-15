@@ -150,6 +150,45 @@ def partition() -> None:
 
 
 @app.command()
+def adjudicate(verdicts_file: str) -> None:
+    """Merge adjudicated verdicts (lines: 'conv_id#turn_index<TAB>yes|no') into
+    gold labels. yes -> the session task intent; no -> no actionable intent.
+    Adjudicated rows lose their ambiguous flag (adjudication is ground truth)."""
+    import shutil
+
+    verdicts: dict[str, str] = {}
+    with open(verdicts_file) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            rid, verdict = line.split("\t")
+            if verdict not in ("yes", "no"):
+                raise typer.BadParameter(f"bad verdict {verdict!r} for {rid}")
+            verdicts[rid] = verdict
+
+    rows = load_gold()
+    stats = {"promoted": 0, "demoted": 0, "kept_yes": 0, "kept_no": 0, "unmatched": len(verdicts)}
+    for r in rows:
+        v = verdicts.get(f"{r.conversation_id}#{r.turn_index}")
+        if v is None:
+            continue
+        stats["unmatched"] -= 1
+        was_positive = bool(r.labels)
+        if v == "yes":
+            r.labels = [r.session_task_intent]
+            stats["kept_yes" if was_positive else "promoted"] += 1
+        else:
+            r.labels = []
+            stats["demoted" if was_positive else "kept_no"] += 1
+        r.ambiguous = False
+    save_gold(rows)
+    shutil.copy(verdicts_file, GOLD_DIR / "adjudications.tsv")
+    typer.echo(json.dumps(stats, indent=1))
+    typer.echo("run `poc partition` to refresh the manifest, then `poc train`")
+
+
+@app.command()
 def replay(url: str = "http://localhost:8080", n_conversations: int = 5) -> None:
     """Stream test-split conversations through the running Go server and
     compare its decisions with the Python offline forward pass."""
@@ -165,11 +204,14 @@ def replay(url: str = "http://localhost:8080", n_conversations: int = 5) -> None
     from .paths import ARTIFACTS_DIR
     from .runtime import Scorer
 
-    art_dirs = sorted(ARTIFACTS_DIR.glob("artifact-*"))
-    if not art_dirs:
-        typer.echo("no artifact — run `poc train` first")
+    # Compare against exactly the artifact the server is serving.
+    with urllib.request.urlopen(f"{url}/healthz", timeout=10) as resp:
+        model_version = json.loads(resp.read())["model_version"]
+    art = ARTIFACTS_DIR / model_version
+    if not art.exists():
+        typer.echo(f"server serves {model_version} but {art} does not exist locally")
         raise typer.Exit(1)
-    art = art_dirs[-1]
+    typer.echo(f"comparing against server artifact: {model_version}")
     model = json.loads((art / "model.json").read_text())
     vocab = json.loads((art / "tfidf_vocab.json").read_text())
     mats = {a: np.load(art / f) for a, f in NPY_FILES.items()}

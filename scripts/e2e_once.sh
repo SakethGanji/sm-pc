@@ -19,7 +19,8 @@ echo "=== [3/5] Go tests incl. Python<->Go parity ==="
 
 echo "=== [4/5] serve ==="
 (cd server && go build -o bin/serve ./cmd/serve)
-ARTIFACT_DIR=$(ls -d artifacts/artifact-* | sort | tail -1)
+# newest by mtime — hash-named artifacts do not sort chronologically
+ARTIFACT_DIR=$(ls -dt artifacts/artifact-* | head -1)
 server/bin/serve -addr :8080 -artifact "$ARTIFACT_DIR" &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
