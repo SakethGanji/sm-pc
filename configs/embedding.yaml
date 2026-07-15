@@ -1,0 +1,6 @@
+# §6.3 embedding provider — pinned; any change here means a new artifact + full re-embed.
+provider: gemini
+model: gemini-embedding-001
+task_type: CLASSIFICATION
+output_dim: 768
+l2_normalize: true

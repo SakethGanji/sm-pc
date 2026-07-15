@@ -1,0 +1,13 @@
+# Lexical branch (§6.5) + shared tokenizer. The tokenizer is deliberately simple
+# (lowercase, word regex, 1-2 grams) so the Go implementation matches exactly.
+tokenizer:
+  pattern: "[a-z0-9']+"
+tfidf:
+  ngram_min: 1
+  ngram_max: 2
+  min_df: 2
+  sublinear_tf: true
+  max_vocab: 200000
+context:
+  agent_tag: "[AGENT]"
+  customer_tag: "[CUSTOMER]"

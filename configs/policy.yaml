@@ -1,0 +1,6 @@
+# §6.9 decision policy.
+tau_low: 0.30          # max calibrated p below this and nothing accepted -> no_supported_intent
+max_accepted: 3
+# Exclusive groups: within a group keep only the argmax candidate.
+# None needed for the HVB taxonomy; mechanism stays implemented + unit-tested.
+exclusive_groups: []

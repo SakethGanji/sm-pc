@@ -1,0 +1,5 @@
+# §6.1 fragment stitcher. Merge previous caller segment into current iff ALL hold.
+max_gap_ms: 2000
+prev_max_tokens: 6
+incompleteness_cues: [to, and, my, the, a, an, i, is, was, for, with, because, so, but, uh, um]
+combined_max_tokens: 120

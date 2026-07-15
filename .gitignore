@@ -1,0 +1,9 @@
+data/raw/
+data/gold/
+data/cache/
+artifacts/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+server/bin/

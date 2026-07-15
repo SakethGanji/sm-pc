@@ -1,0 +1,21 @@
+version: hvb-1
+# Flat intents (HVB task types) with main-intent family roll-up.
+intents:
+  replace_card: {family: card_services}
+  order_checks: {family: card_services}
+  transfer_money: {family: money_movement}
+  pay_bill: {family: money_movement}
+  check_balance: {family: account_access}
+  reset_password: {family: account_access}
+  schedule_appointment: {family: branch_services}
+  get_branch_hours: {family: branch_services}
+# HVB metadata task_type string -> intent name
+task_type_map:
+  replace card: replace_card
+  order checks: order_checks
+  transfer money: transfer_money
+  pay bill: pay_bill
+  check balance: check_balance
+  reset password: reset_password
+  schedule appointment: schedule_appointment
+  get branch hours: get_branch_hours
