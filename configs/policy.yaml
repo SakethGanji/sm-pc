@@ -1,4 +1,5 @@
-# §6.9 decision policy.
+# §6.9 decision policy + precommitted precision floor (set before results seen).
+precision_floor: 0.90  # per-intent minimum precision; thresholds chosen to meet it
 tau_low: 0.30          # max calibrated p below this and nothing accepted -> no_supported_intent
 max_accepted: 3
 # Exclusive groups: within a group keep only the argmax candidate.
