@@ -1,5 +1,14 @@
 # Synthetic training-data track (rehearsal)
 
+> **Status: executed — measured NULL result. Record, not guidance.** This track
+> was run (synth-b1, then the synth-b2 call-opening batch). Once the real labels
+> were cleaned, the ablation gate showed synthetic data *lowered* held-out
+> coverage (0.916 → 0.884), so it was **dropped**. Kept here as the method + the
+> "we tried synthetic augmentation, here's why it didn't help" record. For a
+> real build, only reach for this to sharpen confusable sibling boundaries, and
+> always gate on the with/without ablation on real data. See
+> `docs/feasibility-verdict.md` for the outcome.
+
 ## Premise and honest expectations
 
 Measured so far: label *quality* moved coverage 0.13 → 0.40; training *volume* is

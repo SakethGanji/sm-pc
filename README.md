@@ -58,5 +58,6 @@ mean a new artifact. Raw ASR text is never cleaned.
 - **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — this rehearsal's result (GREEN, 0.92 held-out).
 - **[docs/design-doc.md](docs/design-doc.md)** — the work spec this rehearses.
 - **[port-template/](port-template/)** — fill-in-the-blanks stubs + sample data + smoke test.
+- [docs/synthetic-data-plan.md](docs/synthetic-data-plan.md) — record of the synthetic-data experiment (tried, null result, dropped).
 
 Serve without Go (POC): `cd trainer && uv run python ../scripts/serve_py.py`.
