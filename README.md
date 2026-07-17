@@ -50,3 +50,13 @@ Decisions: `accepted | multi_accepted | no_supported_intent | abstained`;
 infrastructure failures return `degraded`, never a semantic decision.
 Every numeric knob lives in `configs/*.yaml`; changed configs or thresholds
 mean a new artifact. Raw ASR text is never cleaned.
+
+## Docs
+
+- **[POC-GUIDE.md](POC-GUIDE.md)** — build it on your own data (start here).
+- **[docs/office-playbook.md](docs/office-playbook.md)** — the full method + reasoning.
+- **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — this rehearsal's result (GREEN, 0.92 held-out).
+- **[docs/design-doc.md](docs/design-doc.md)** — the work spec this rehearses.
+- **[port-template/](port-template/)** — fill-in-the-blanks stubs + sample data + smoke test.
+
+Serve without Go (POC): `cd trainer && uv run python ../scripts/serve_py.py`.
