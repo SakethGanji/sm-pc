@@ -48,8 +48,9 @@ which is dataset-agnostic and runs as-is.
    freezes + hashes the test split).
 6. **Train** — `uv run poc train` (embeds cached → heads → fusion → calibrate →
    threshold → artifact).
-7. **Verify** — `cd server && go test ./...` (Python↔Go parity on your artifact),
-   `uv run poc replay` (online vs offline agree).
+7. **Verify** — `uv run pytest` (incl. the stitcher), start
+   `uv run python ../scripts/serve_py.py`, then `uv run poc replay` (online vs
+   offline agree on your artifact).
 8. **Diagnose before trusting** — run `scripts/ceilings.py`, `scripts/fp_audit.py`,
    `scripts/held_out_eval.py` (playbook §7). These tell you whether any gap is a
    label, audio, or model problem — run them *before* proposing any upgrade.

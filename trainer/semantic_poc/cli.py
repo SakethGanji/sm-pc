@@ -190,9 +190,9 @@ def adjudicate(verdicts_file: str) -> None:
 
 
 @app.command()
-def replay(url: str = "http://localhost:8080", n_conversations: int = 5) -> None:
-    """Stream test-split conversations through the running Go server and
-    compare its decisions with the Python offline forward pass."""
+def replay(url: str = "http://localhost:8081", n_conversations: int = 5) -> None:
+    """Stream test-split conversations through the running server (scripts/serve_py.py)
+    and compare its decisions with the Python offline forward pass."""
     import urllib.request
     from datetime import datetime, timezone
 

@@ -1,5 +1,5 @@
-"""Lexical TF-IDF (§6.5), implemented explicitly so the Go server can mirror
-the math exactly (parity-tested):
+"""Lexical TF-IDF (§6.5), implemented explicitly (not via a library) so the
+math is deterministic and exactly reproducible by any other implementation:
 
   tokens  = regex findall on lowercased text
   terms   = unigrams + bigrams ("w1 w2")

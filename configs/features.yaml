@@ -1,5 +1,6 @@
 # Lexical branch (§6.5) + shared tokenizer. The tokenizer is deliberately simple
-# (lowercase, word regex, 1-2 grams) so the Go implementation matches exactly.
+# (lowercase, word regex, 1-2 grams) so it stays exactly reproducible across
+# implementations (train vs serve, or a future non-Python server).
 tokenizer:
   pattern: "[a-z0-9']+"
 tfidf:

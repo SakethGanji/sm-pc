@@ -1,5 +1,5 @@
 """Immutable, hash-named artifact of language-neutral files (JSON + .npy).
-The Go server loads exactly one of these; any parameter change = new artifact."""
+The server loads exactly one of these; any parameter change = new artifact."""
 
 import hashlib
 import json

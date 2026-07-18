@@ -479,9 +479,8 @@ labels, then human-adjudicate. Delete or replace `weak_labels.py` accordingly.
 ### The one conditional code touch: a different embedding provider
 
 If you don't use Gemini, edit `trainer/semantic_poc/embeddings.py` (the
-`_fetch_batch` call) to hit your provider, and mirror it in the Go server's
-`server/internal/embedding/`. Keep the on-disk cache and the L2-normalization.
-If you use Gemini, change nothing here.
+`_fetch_batch` call) to hit your provider. Keep the on-disk cache and the
+L2-normalization. If you use Gemini, change nothing here.
 
 ### What you run (same commands, your data)
 
@@ -490,8 +489,8 @@ uv run poc ingest        # your adapter -> data/gold/gold.jsonl
 # --- your labeling / adjudication pass fills in labels here ---
 uv run poc partition     # conversation-grouped time-ordered splits + frozen-test hash
 uv run poc train         # embed (cached) -> heads -> fusion -> calibrate -> threshold -> artifact
-go test ./...            # Python<->Go parity on your artifact
-go run ./cmd/serve -artifact artifacts/<newest>   # serve
+uv run pytest            # unit tests, incl. the stitcher
+uv run python ../scripts/serve_py.py --artifact <newest>   # serve
 uv run poc replay        # sanity-check online vs offline agree
 ```
 
@@ -528,7 +527,7 @@ your data, per intent.*
 - [ ] Set `policy.yaml` (floor, accept_floor, exclusive_groups).
 - [ ] Pointed `embedding.yaml` (and provider code, if not Gemini) at your embedder.
 - [ ] Ran your labeling/adjudication pass to fill `labels` (not weak heuristics).
-- [ ] `poc partition` → `poc train` → `go test` green on your data.
+- [ ] `poc partition` → `poc train` → `pytest` green on your data.
 - [ ] Ran §7 diagnostics before trusting or upgrading anything.
 
 ---

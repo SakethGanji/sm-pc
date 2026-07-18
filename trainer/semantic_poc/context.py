@@ -1,5 +1,5 @@
-"""§6.2 context builder. Pure function shared (conceptually) with the Go server;
-the exact string format is part of the model contract and covered by parity fixtures."""
+"""§6.2 context builder. The exact string format is part of the model
+contract (train and serve must build it identically) and covered by fixtures."""
 
 
 def build_c1(previous_agent_utterance: str, current_transcript: str,

@@ -98,11 +98,11 @@ uv run python ../scripts/held_out_eval.py <artifact>           # per-intent resu
 
 ## Locked design decisions (from planning)
 
-- **Serve from Python for the POC** (`scripts/serve_py.py`) — no Go needed. Same
-  `/classify` contract, identical results. Bring in the Go server later for
-  production speed against the *same* artifact (no retrain). Python is fine here:
-  the work is I/O-bound (the embedding call), so async/batching scale it; Go is
-  for high-concurrency, tight-tail-latency production.
+- **Serve from Python** (`scripts/serve_py.py`) — implements the full `/classify`
+  contract (stitching, decision policy, latency breakdown). A Go server is part
+  of the original design-doc target architecture for production but has been
+  removed from this repo for now; nothing here depends on it. Python is fine for
+  the POC: the work is I/O-bound (the embedding call), so async/batching scale it.
 - **Context = token-budgeted backward window** (robust to ASR splitting), not a
   fixed turn count. Start ~96–128 tokens of preceding context, speaker-tagged;
   sweep to find the smallest W that captures the coverage. One function change
@@ -118,12 +118,14 @@ uv run python ../scripts/held_out_eval.py <artifact>           # per-intent resu
 
 ## Code status: ready as-is
 
-- **No changes:** train / calibrate / threshold / serve (Python), accept-floor
-  guard, imbalance handling, conversation-grouped splits, all diagnostics.
+- **No changes:** train / calibrate / threshold / serve (Python), stitching,
+  accept-floor guard, imbalance handling, conversation-grouped splits, all
+  diagnostics.
 - **You build (fill-ins):** the `ingest.py` adapter, the critic runner
   (`port-template/bootstrap_labels.py` step 2), the two config files.
-- **Optional, not for the POC:** main→sub fallback, the Go server, the LLM
-  rewrite path, the token-window widening (add these as your data demands).
+- **Optional, not for the POC:** main→sub fallback, a Go server for production
+  latency (same artifact, no retrain — not part of this repo right now), the
+  LLM rewrite path, the token-window widening (add these as your data demands).
 
 ## Your first week
 
