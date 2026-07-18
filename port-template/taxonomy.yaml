@@ -6,6 +6,11 @@
 # policy — see playbook §8/§9.1).
 # =============================================================================
 
+# TODO 0: Required. artifact.py reads this at export time (`poc train`'s last
+# step) — a missing version key crashes the export after you've already paid
+# for embeddings. Bump it whenever the intent set changes meaningfully.
+version: your-taxonomy-v1
+
 # TODO 1: List every intent, grouped conceptually by family. The KEY is the
 # intent name the model emits (snake_case, stable — changing it means a new
 # artifact). `family` is the coarse bucket for hierarchy + fallback.
@@ -39,9 +44,7 @@ intents:
 
   # ... your remaining intents / families ...
 
-# TODO 2 (optional): If your raw data carries coarse call-reason codes, map them
-# here to seed session_task_intent during ingest. WEAK hint only — never a label.
-# If unused, delete this block (ingest passes "" instead).
-reason_code_map: {}
-  # "CARD_REPLACE_v2": replace_card
-  # "BILLPAY":         pay_bill
+# Call-reason-code -> intent mapping (optional, WEAK hint only) is NOT set here.
+# It lives in `ingest.py`'s REASON_CODE_MAP (TODO 1 there) because ingest is the
+# only place that reads it — nothing in the trainer/serve code touches this file
+# for that purpose, so a block here would silently have no effect.

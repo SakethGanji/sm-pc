@@ -64,7 +64,7 @@ def build_batches(splits=("policy", "calibration", "test", "train")) -> None:
     Each line: {"id", "split", "agent", "caller"} — everything a critic needs to
     label the turn blind. Eval splits are dumped EXHAUSTIVELY; you may pre-filter
     train (see TODO 2)."""
-    rows = [r for r in load_gold() if not r.conversation_id.startswith("synth-")]
+    rows = load_gold()
     BATCH_DIR.mkdir(parents=True, exist_ok=True)
     for old in BATCH_DIR.glob("batch_*.jsonl"):
         old.unlink()

@@ -23,6 +23,7 @@ policy_cfg = load_config("policy")
 feat_cfg = load_config("features")
 intents = list(taxonomy["intents"].keys())
 floor = policy_cfg["precision_floor"]
+accept_floor = policy_cfg.get("accept_floor", 0.0)
 
 rows = [r for r in load_gold() if not r.ambiguous]
 parts = {s: [r for r in rows if r.split == s] for s in ["train", "calibration", "policy"]}
@@ -51,7 +52,7 @@ for frac in [0.25, 0.5, 0.75, 1.0]:
     m.lex_coef, m.lex_int = fit_branch_full(tr.X_lex, tr.y, intents, m.lex_cs)
     m.platt_a, m.platt_b = fit_platt(fused_logits(m, cal), cal.y, intents)
     probs = sigmoid(m.platt_a * fused_logits(m, pol) + m.platt_b)
-    thresholds = pick_thresholds(probs, pol.y, intents, floor)
+    thresholds = pick_thresholds(probs, pol.y, intents, floor, accept_floor)
 
     recalls, accepted, floors_met = [], 0, 0
     for k, intent in enumerate(intents):

@@ -24,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trainer"))
 from semantic_poc.paths import GOLD_DIR  # noqa: E402
+from semantic_poc.schema import GoldRow  # noqa: E402
 
 pool_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("labeled_pool.jsonl")
 gold_path = GOLD_DIR / "gold.jsonl"
@@ -35,6 +36,16 @@ if gold_path.exists():
         existing_ids.add(f"{r['conversation_id']}#{r['turn_index']}")
 
 pool_rows = [json.loads(l) for l in open(pool_path) if l.strip()]
+
+# Validate every row against the real schema BEFORE writing anything — a bad
+# row from label_helper.py should fail loudly here, not silently corrupt
+# gold.jsonl and surface as a cryptic error the next time it's loaded.
+for r in pool_rows:
+    try:
+        GoldRow.model_validate(r)
+    except Exception as exc:  # noqa: BLE001
+        rid = f"{r.get('conversation_id')}#{r.get('turn_index')}"
+        sys.exit(f"invalid row {rid} in {pool_path}: {exc}")
 
 stats = Counter()
 new_rows = []

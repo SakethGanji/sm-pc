@@ -126,9 +126,12 @@ def write_row(pool_file, call_id: str, turn_idx: int, raw: str, prev_agent: str,
         # fully ingested later via ingest.py.
         "turn_index": 1000 + turn_idx,
         "timestamp_ms": (1000 + turn_idx) * 10_000,
-        "raw_transcript": raw.strip().lower(),
-        "human_transcript": raw.strip().lower(),
-        "previous_agent_utterance": (prev_agent or "").strip().lower(),
+        # .strip() only — raw ASR text is never cleaned (see ingest.py's rule).
+        # human_transcript == raw_transcript here because there's no separate
+        # correction pass in this manual flow, not because either was normalized.
+        "raw_transcript": raw.strip(),
+        "human_transcript": raw.strip(),
+        "previous_agent_utterance": (prev_agent or "").strip(),
         "prev_caller_segment": None,
         "dialog_acts": [f"manual:{provenance}"],
         "session_task_intent": sub_intent_tag,

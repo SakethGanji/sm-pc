@@ -40,9 +40,12 @@ same noisy labels it set thresholds even higher and lost coverage.
 biased, one recall-biased; keep only rows where both agree on the same label,
 disagreements marked ambiguous and excluded). Applied exhaustively to the policy
 and calibration splits, to score/regex-flagged train rows, and — for the final
-verdict only — to the full test split. Frozen-test row hash was verified
-unchanged before opening it (labels live outside the hashed payload... see
-caveats). Policy positives 165→230; clean test positives 107→155.
+verdict only — to the full test split. The frozen-test row hash (which does
+include `labels` — see `partitions.py`'s `test_payload`) was verified unchanged
+across every iteration up to that point, i.e. the test split was genuinely
+untouched until this single, final, deliberate adjudication pass — not
+peeked at or iteratively tuned against. Policy positives 165→230; clean test
+positives 107→155.
 
 ## The numbers
 

@@ -192,10 +192,13 @@ def ingest_corpus(raw_dir: Path) -> list[GoldRow]:
 # ---------------------------------------------------------------------------
 # NOTE — wiring into the CLI:
 # The `ingest` command in trainer/semantic_poc/cli.py currently calls the HVB
-# signature `ingest_corpus(RAW_HVB, taxonomy["task_type_map"])`. Change it to:
+# signature `ingest_corpus(RAW_HVB, taxonomy["task_type_map"])`. Change ONLY
+# that one line — keep the `_preserve_labeled` call, it's what stops a re-run
+# of `poc ingest` from wiping out your adjudicated labels:
 #
 #     from .ingest import ingest_corpus
 #     rows = ingest_corpus(YOUR_RAW_DIR)          # e.g. paths.RAW_DIR
+#     rows = _preserve_labeled(rows)              # keeps labels across re-ingests
 #     save_gold(rows)
 #
 # and point YOUR_RAW_DIR at your corpus (add it to paths.py). Everything after

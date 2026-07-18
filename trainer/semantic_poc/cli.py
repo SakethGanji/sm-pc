@@ -25,6 +25,23 @@ def save_gold(rows: list[GoldRow]) -> None:
             f.write(r.model_dump_json() + "\n")
 
 
+def _preserve_labeled(rows: list[GoldRow]) -> list[GoldRow]:
+    """Re-running ingest must never clobber adjudicated labels: any row that
+    already exists in gold.jsonl with labels/ambiguous/split set keeps them."""
+    if not GOLD_PATH.exists():
+        return rows
+    prior = {(r.conversation_id, r.turn_index): r for r in load_gold()}
+    preserved = 0
+    for r in rows:
+        p = prior.get((r.conversation_id, r.turn_index))
+        if p is not None and (p.labels or p.ambiguous or p.split):
+            r.labels, r.ambiguous, r.split = p.labels, p.ambiguous, p.split
+            preserved += 1
+    if preserved:
+        typer.echo(f"preserved {preserved} previously labeled/split rows from existing gold.jsonl")
+    return rows
+
+
 @app.command()
 def ingest() -> None:
     """HVB corpus -> data/gold/gold.jsonl with weak turn labels."""
@@ -32,6 +49,7 @@ def ingest() -> None:
 
     taxonomy = load_config("taxonomy")
     rows = ingest_corpus(RAW_HVB, taxonomy["task_type_map"])
+    rows = _preserve_labeled(rows)
     save_gold(rows)
     label_counts = Counter(l for r in rows for l in r.labels)
     n_labeled = sum(1 for r in rows if r.labels)
