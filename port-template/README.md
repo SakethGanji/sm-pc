@@ -12,7 +12,9 @@ order below. Full rationale for each step is in `docs/office-playbook.md`
 | `ingest.py` | `trainer/semantic_poc/ingest.py` | **the main rewrite** — read your corpus → `GoldRow`s |
 | `taxonomy.yaml` | `configs/taxonomy.yaml` | your ~50 intents + families |
 | `policy.yaml` | `configs/policy.yaml` | precision floor, accept-floor, exclusive groups |
-| `bootstrap_labels.py` | `scripts/bootstrap_labels.py` | the label adjudication loop (replaces HVB weak labels) |
+| `bootstrap_labels.py` | `scripts/bootstrap_labels.py` | the label adjudication loop, **API-based** (batched LLM calls) |
+| `label_helper.py` | `scripts/label_helper.py` | the label loop, **manual/chatbot-assisted** (no API calls) |
+| `merge_labeled_pool.py` | `scripts/merge_labeled_pool.py` | appends `label_helper.py`'s output into `gold.jsonl` |
 
 Not templated because they change little or not at all: the embedding provider
 (`trainer/semantic_poc/embeddings.py` — only if you're not on Gemini), and
@@ -25,10 +27,21 @@ which is dataset-agnostic and runs as-is.
    your raw path, then `uv run poc ingest`. Eyeball `data/gold/gold.jsonl`:
    customer turns only, raw text uncleaned, negatives present, `labels` empty.
 2. **Taxonomy** — put your intents + families in `configs/taxonomy.yaml`.
-3. **Label** — `python scripts/bootstrap_labels.py build`, run your two blind
-   critics + human adjudication (step 2 in that file), then
-   `python scripts/bootstrap_labels.py apply`. Clean the eval splits first;
-   gate on kappa ≥ ~0.75.
+3. **Label** — two ways, pick one (or mix — e.g. manual now, API later at scale):
+   - **API-based:** `python scripts/bootstrap_labels.py build`, run your two
+     blind critics + human adjudication (step 2 in that file), then
+     `python scripts/bootstrap_labels.py apply`. Clean the eval splits first;
+     gate on kappa ≥ ~0.75.
+   - **Manual/chatbot-assisted (no API cost):** stratify by pulling calls
+     already tagged with a target MAIN intent from your export, walk them one
+     at a time with `python scripts/label_helper.py --main cards --input
+     your_export.csv` — it prompts you to paste each call into your internal
+     chatbot, records the sub-intent + a verified/chatbot-only flag, and tracks
+     live progress toward ~150/sub-intent. Then
+     `python scripts/merge_labeled_pool.py` appends the results straight into
+     `gold.jsonl`. **Verify generously** (say yes to "did you personally
+     confirm this?") — you can't control which conversation lands in your eval
+     split later, so unverified rows there are a real risk.
 4. **Policy** — set safety knobs in `configs/policy.yaml` (do this before you
    look at any result).
 5. **Partition** — `uv run poc partition` (conversation-grouped, time-ordered,
