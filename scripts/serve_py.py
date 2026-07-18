@@ -2,7 +2,7 @@
 response contract: stitch -> embed -> lexical + semantic -> fusion -> decision
 policy.
 
-Run:  cd trainer && uv run python ../scripts/serve_py.py [--port 8081]
+Run:  cd trainer && source .venv/bin/activate && python ../scripts/serve_py.py [--port 8081]
 Test: curl -s localhost:8081/classify -H 'Content-Type: application/json' \
         -d '{"current_customer_transcript":"i lost my card","previous_agent_utterance":"how can i help you"}'
 """

@@ -17,7 +17,7 @@ HOW TO USE
 1. Copy this file to `trainer/semantic_poc/ingest.py` (replacing the HVB one).
 2. Fill in every `# TODO:` below with your data's specifics.
 3. Point `cli.py`'s `ingest()` command at your raw path (see NOTE at the bottom).
-4. Run `uv run poc ingest` and eyeball `data/gold/gold.jsonl`.
+4. Run `poc ingest` (venv activated) and eyeball `data/gold/gold.jsonl`.
 
 THE CONTRACT (what a valid GoldRow needs — see trainer/semantic_poc/schema.py)
 -----------------------------------------------------------------------------

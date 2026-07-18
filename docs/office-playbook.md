@@ -485,13 +485,14 @@ L2-normalization. If you use Gemini, change nothing here.
 ### What you run (same commands, your data)
 
 ```
-uv run poc ingest        # your adapter -> data/gold/gold.jsonl
+cd trainer && source .venv/bin/activate   # see README.md Setup
+poc ingest        # your adapter -> data/gold/gold.jsonl
 # --- your labeling / adjudication pass fills in labels here ---
-uv run poc partition     # conversation-grouped time-ordered splits + frozen-test hash
-uv run poc train         # embed (cached) -> heads -> fusion -> calibrate -> threshold -> artifact
-uv run pytest            # unit tests, incl. the stitcher
-uv run python ../scripts/serve_py.py --artifact <newest>   # serve
-uv run poc replay        # sanity-check online vs offline agree
+poc partition     # conversation-grouped time-ordered splits + frozen-test hash
+poc train         # embed (cached) -> heads -> fusion -> calibrate -> threshold -> artifact
+pytest             # unit tests, incl. the stitcher
+python ../scripts/serve_py.py --artifact <newest>   # serve
+poc replay        # sanity-check online vs offline agree
 ```
 
 ### The diagnostic + labeling scripts, mapped to this doc

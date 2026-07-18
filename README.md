@@ -28,25 +28,33 @@ serve:  Python — stitcher → embedding + lexical → semantic → fusion → 
 ## Setup
 
 ```sh
+cd trainer
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .                   # registers the `poc` command
 export GEMINI_API_KEY=...          # https://aistudio.google.com/apikey
-# corpus (once): git clone https://github.com/cricketclub/gridspace-stanford-harper-valley data/raw/harper-valley
+# corpus (once): git clone https://github.com/cricketclub/gridspace-stanford-harper-valley ../data/raw/harper-valley
 ```
+
+Requires Python 3.12 (see `trainer/.python-version`).
 
 ## Run
 
 ```sh
 cd trainer
-uv run poc ingest        # HVB -> data/gold/gold.jsonl
-uv run poc partition     # splits + manifest + frozen-test hash
-uv run poc train         # embed (cached) -> 3 models -> calibrate -> thresholds -> artifact
+source .venv/bin/activate          # if not already active
 
-uv run pytest            # unit tests, incl. stitcher
-uv run python ../scripts/serve_py.py &     # POST /classify on :8081, loads newest artifact
-uv run poc replay        # stream test conversations through the server,
-                         # compare with the Python offline forward pass
+poc ingest        # HVB -> data/gold/gold.jsonl
+poc partition     # splits + manifest + frozen-test hash
+poc train         # embed (cached) -> 3 models -> calibrate -> thresholds -> artifact
+
+pytest             # unit tests, incl. stitcher
+python ../scripts/serve_py.py &     # POST /classify on :8081, loads newest artifact
+poc replay        # stream test conversations through the server,
+                  # compare with the Python offline forward pass
 ```
 
-Tests: `uv run pytest` (trainer).
+Tests: `pytest` (trainer, venv activated).
 
 Decisions: `accepted | multi_accepted | no_supported_intent | abstained`;
 infrastructure failures return `degraded`, never a semantic decision.
@@ -62,4 +70,4 @@ mean a new artifact. Raw ASR text is never cleaned.
 - **[port-template/](port-template/)** — fill-in-the-blanks stubs + sample data + smoke test.
 - [docs/synthetic-data-plan.md](docs/synthetic-data-plan.md) — record of the synthetic-data experiment (tried, null result, dropped).
 
-Serve: `cd trainer && uv run python ../scripts/serve_py.py`.
+Serve: `cd trainer && source .venv/bin/activate && python ../scripts/serve_py.py`.

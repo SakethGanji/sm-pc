@@ -4,8 +4,8 @@ thresholds on the cleaned test split. Reports per-intent precision/recall and
 overall coverage at the maintained precision floor. This is the generalization
 number (thresholds certified on policy, evaluated once on held-out test).
 
-Usage: challenger-env not needed; run via trainer venv.
-  uv run python scripts/held_out_eval.py <artifact_name> [<artifact_name> ...]
+Usage (from trainer/, venv activated):
+  python ../scripts/held_out_eval.py <artifact_name> [<artifact_name> ...]
 """
 
 import json

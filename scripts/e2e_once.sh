@@ -6,14 +6,14 @@ cd "$(dirname "$0")/.."
 set -a; source .env; set +a
 
 echo "=== [1/4] train (embeds via Gemini, cache-first) ==="
-(cd trainer && uv run poc train)
+(cd trainer && source .venv/bin/activate && poc train)
 
 echo "=== [2/4] trainer unit tests (incl. stitcher) ==="
-(cd trainer && uv run pytest -q)
+(cd trainer && source .venv/bin/activate && pytest -q)
 
 echo "=== [3/4] serve ==="
 ARTIFACT_DIR=$(ls -dt artifacts/artifact-* | head -1)
-(cd trainer && uv run python ../scripts/serve_py.py --port 8081 --artifact "$(basename "$ARTIFACT_DIR")") &
+(cd trainer && source .venv/bin/activate && python ../scripts/serve_py.py --port 8081 --artifact "$(basename "$ARTIFACT_DIR")") &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
 for _ in $(seq 1 40); do
@@ -23,6 +23,6 @@ done
 curl -sf http://localhost:8081/healthz
 
 echo "=== [4/4] replay test conversations through the live server ==="
-(cd trainer && uv run poc replay --n-conversations 8)
+(cd trainer && source .venv/bin/activate && poc replay --n-conversations 8)
 
 echo "=== E2E COMPLETE ==="

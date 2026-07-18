@@ -154,7 +154,7 @@ def apply_verdicts() -> None:
             raise ValueError(f"unknown verdict label {v!r} for {r.conversation_id}")
     save_gold(rows)
     print(json.dumps(dict(stats), indent=1))
-    print("applied. now run `uv run poc partition` then `uv run poc train`.")
+    print("applied. now run `poc partition` then `poc train`.")
 
 
 if __name__ == "__main__":

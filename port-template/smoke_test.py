@@ -3,7 +3,7 @@ Smoke test for the ingest adapter — proves the template produces valid gold ro
 from the fake corpus in sample_data/ BEFORE you wire in real data.
 
 Run from the repo root:
-    cd trainer && uv run python ../port-template/smoke_test.py
+    cd trainer && source .venv/bin/activate && python ../port-template/smoke_test.py
 
 What it checks (the invariants your real adapter must also satisfy):
   - only CUSTOMER turns become rows (agent turns are context)

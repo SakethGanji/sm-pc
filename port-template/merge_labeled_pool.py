@@ -5,7 +5,7 @@ Rows from label_helper.py are already GoldRow-shaped, so this is mostly a
 dedup + append + honest-summary step — not a format conversion.
 
 Usage:
-    cd trainer && uv run python ../port-template/merge_labeled_pool.py \\
+    cd trainer && source .venv/bin/activate && python ../port-template/merge_labeled_pool.py \\
         ../port-template/labeled_pool.jsonl
 
 Prints a verified vs. chatbot-only breakdown so you know, before you train,
@@ -81,4 +81,4 @@ if unverified_frac > 0.3:
           f"your eval split, consider going back and verifying more before "
           f"trusting the certified precision numbers.")
 
-print("\nNext: uv run poc partition && uv run poc train")
+print("\nNext: poc partition && poc train")

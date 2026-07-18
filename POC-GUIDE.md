@@ -86,14 +86,15 @@ imbalance; eval keeps the natural ratio).
 ## Run it
 
 ```
-cd trainer && uv run python ../port-template/smoke_test.py     # prove the machine
+cd trainer && source .venv/bin/activate    # see README.md Setup if this venv doesn't exist yet
+python ../port-template/smoke_test.py     # prove the machine
 # rewrite ingest.py for your data; fill taxonomy.yaml + policy.yaml
-uv run poc ingest        # your data -> gold.jsonl (labels blank)
+poc ingest        # your data -> gold.jsonl (labels blank)
 # ... critic labeling pass fills labels ...
-uv run poc partition     # auto-split, freeze test
-uv run poc train         # embed(cached) -> heads -> calibrate -> threshold -> artifact
-uv run python ../scripts/serve_py.py --port 8081               # SERVE (Python-only, no Go)
-uv run python ../scripts/held_out_eval.py <artifact>           # per-intent result
+poc partition     # auto-split, freeze test
+poc train         # embed(cached) -> heads -> calibrate -> threshold -> artifact
+python ../scripts/serve_py.py --port 8081               # SERVE (Python-only, no Go)
+python ../scripts/held_out_eval.py <artifact>           # per-intent result
 ```
 
 ## Locked design decisions (from planning)

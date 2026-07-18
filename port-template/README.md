@@ -24,7 +24,7 @@ which is dataset-agnostic and runs as-is.
 ## Order of operations
 
 1. **Ingest** — rewrite `ingest.py` (TODOs 1–5), wire `cli.py`'s `ingest()` to
-   your raw path, then `uv run poc ingest`. Eyeball `data/gold/gold.jsonl`:
+   your raw path, then `poc ingest` (venv activated). Eyeball `data/gold/gold.jsonl`:
    customer turns only, raw text uncleaned, negatives present, `labels` empty.
 2. **Taxonomy** — put your intents + families in `configs/taxonomy.yaml`.
 3. **Label** — two ways, pick one (or mix — e.g. manual now, API later at scale):
@@ -44,12 +44,12 @@ which is dataset-agnostic and runs as-is.
      split later, so unverified rows there are a real risk.
 4. **Policy** — set safety knobs in `configs/policy.yaml` (do this before you
    look at any result).
-5. **Partition** — `uv run poc partition` (conversation-grouped, time-ordered,
+5. **Partition** — `poc partition` (conversation-grouped, time-ordered,
    freezes + hashes the test split).
-6. **Train** — `uv run poc train` (embeds cached → heads → fusion → calibrate →
+6. **Train** — `poc train` (embeds cached → heads → fusion → calibrate →
    threshold → artifact).
-7. **Verify** — `uv run pytest` (incl. the stitcher), start
-   `uv run python ../scripts/serve_py.py`, then `uv run poc replay` (online vs
+7. **Verify** — `pytest` (incl. the stitcher), start
+   `python ../scripts/serve_py.py`, then `poc replay` (online vs
    offline agree on your artifact).
 8. **Diagnose before trusting** — run `scripts/ceilings.py`, `scripts/fp_audit.py`,
    `scripts/held_out_eval.py` (playbook §7). These tell you whether any gap is a
