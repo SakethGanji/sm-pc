@@ -507,7 +507,10 @@ These are reference implementations — reuse them, pointed at your data:
   rehearsal), `scripts/miss_analysis.py` (per-miss breakdown).
 - **§6 honest scoring** — `scripts/held_out_eval.py` (held-out coverage at the
   floor, per intent).
-- **§10 challenger** — `scripts/challenger.py` (fine-tuned-encoder head-to-head).
+- **§10 challenger** — fine-tuned-encoder head-to-head. Removed from this repo
+  (it needed a separate `challenger-env/` with torch/transformers and didn't
+  clear the bar — see `docs/feasibility-verdict.md`); recover it from git
+  history (`scripts/challenger.py`) if you want to rerun that comparison.
 - **ASR robustness** — `scripts/asr_damage.py` (catch rate vs ASR damage level).
 
 ### Reproduce our *result*, not our numbers
