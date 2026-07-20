@@ -9,8 +9,9 @@ from pathlib import Path
 
 import numpy as np
 
-from .config import config_hash, file_sha256, load_config
-from .paths import ARTIFACTS_DIR, GOLD_DIR
+from . import store
+from .config import config_hash, load_config
+from .paths import ARTIFACTS_DIR
 from .train import Trained
 
 NPY_FILES = {
@@ -29,7 +30,7 @@ def _git_sha() -> str:
 
 
 def export(models: Trained, families: dict[str, str], policy_cfg: dict,
-           eval_summary: dict, fixtures: list[dict]) -> Path:
+           eval_summary: dict, fixtures: list[dict], gold_path: Path) -> Path:
     tmp = ARTIFACTS_DIR / "artifact-tmp"
     if tmp.exists():
         shutil.rmtree(tmp)  # stale files from a crashed export must not ship
@@ -66,7 +67,7 @@ def export(models: Trained, families: dict[str, str], policy_cfg: dict,
     manifest = {
         "name": "poc-hvb-001",
         "git_sha": _git_sha(),
-        "gold_sha256": file_sha256(GOLD_DIR / "gold.jsonl"),
+        "gold_sha256": store.content_sha256(gold_path),
         "embedding": load_config("embedding"),
         "taxonomy_version": load_config("taxonomy")["version"],
         "config_hashes": {n: config_hash(load_config(n))

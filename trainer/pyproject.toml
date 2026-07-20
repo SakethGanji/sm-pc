@@ -10,6 +10,7 @@ dependencies = [
     "pyyaml>=6.0",
     "typer>=0.12",
     "google-genai>=1.0",
+    "duckdb>=1.0",
 ]
 
 [dependency-groups]

@@ -1,0 +1,144 @@
+"""Gold dataset I/O — the single seam that knows how gold is stored on disk.
+
+Everything else in the pipeline speaks `GoldRow` and never opens the gold file
+itself (mirrors the ingest contract: "nothing downstream knows where the data
+came from"). Because of that, the on-disk format is a swappable detail, chosen
+here by file extension:
+
+  .jsonl   — newline-delimited JSON. Human-readable, greppable, diff-friendly,
+             trivially appendable. Best while hand-labeling / adjudicating and
+             through a data-shape-still-moving port.
+  .parquet — columnar, compressed (~10x smaller), typed, with column/predicate
+             pushdown on read. Best for large, read-mostly corpora. Read and
+             written via DuckDB (no pandas/pyarrow dependency).
+
+Row order is preserved EXACTLY across formats. Parquet carries a hidden `_ord`
+column and reads always `ORDER BY _ord`, so a parallel or multi-file scan still
+reconstructs the original order. This matters: TF-IDF fitting and the
+conversation-grouped CV folds are order-sensitive, so an unordered scan would
+silently change the trained model at scale.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import tempfile
+from pathlib import Path
+
+from .schema import GoldRow
+
+_ORD = "_ord"  # hidden ordering column, internal to the parquet representation
+_BATCH = 10_000
+
+
+def content_sha256(path: str | Path) -> str:
+    """Hash the gold CONTENT (canonical row JSON, in order), not the file bytes.
+
+    Format-independent by design: JSONL and Parquet holding identical rows yield
+    the same digest, so the artifact provenance — and the artifact's own content
+    hash — stay stable across a format switch. Streams, so it is O(1) memory.
+    """
+    h = hashlib.sha256()
+    for r in iter_gold(path):
+        h.update(r.model_dump_json().encode())
+        h.update(b"\n")
+    return h.hexdigest()
+
+
+def load_gold(path: str | Path) -> list[GoldRow]:
+    """Load the whole gold set into memory, in original order."""
+    return list(iter_gold(path))
+
+
+def iter_gold(path: str | Path):
+    """Stream gold rows in original order (constant memory)."""
+    path = Path(path)
+    if path.suffix == ".parquet":
+        yield from _iter_parquet(path)
+    else:
+        yield from _iter_jsonl(path)
+
+
+def save_gold(rows, path: str | Path) -> None:
+    """Persist rows atomically (temp file + rename — never a half-written gold)."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    writer = _write_parquet if path.suffix == ".parquet" else _write_jsonl
+    _atomic(path, lambda tmp: writer(rows, tmp))
+
+
+# --- JSONL -----------------------------------------------------------------
+
+def _iter_jsonl(path: Path):
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                yield GoldRow.model_validate_json(line)
+
+
+def _write_jsonl(rows, tmp: Path) -> None:
+    with open(tmp, "w") as f:
+        for r in rows:
+            f.write(r.model_dump_json() + "\n")
+
+
+# --- Parquet (via DuckDB) --------------------------------------------------
+
+def _iter_parquet(path: Path):
+    import duckdb
+
+    con = duckdb.connect()
+    src = f"read_parquet('{path.as_posix()}')"
+    cols = [r[0] for r in con.execute(f"DESCRIBE SELECT * FROM {src}").fetchall()]
+    order = f"ORDER BY {_ORD}" if _ORD in cols else ""
+    keep = [c for c in cols if c != _ORD]
+    sel = ", ".join(f'"{c}"' for c in keep)
+    cur = con.execute(f"SELECT {sel} FROM {src} {order}")
+    while True:
+        batch = cur.fetchmany(_BATCH)
+        if not batch:
+            break
+        for r in batch:
+            yield GoldRow.model_validate(dict(zip(keep, r)))
+
+
+def _write_parquet(rows, tmp: Path) -> None:
+    """Write rows to Parquet, adding `_ord` to preserve their exact order.
+
+    Bridges through a temp JSONL so DuckDB's `read_json_auto` infers the nested
+    schema (the `prev_caller_segment` struct and the list columns) for free —
+    keeping duckdb as the only extra dependency.
+    """
+    import duckdb
+
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", dir=tmp.parent, delete=False) as jf:
+        bridge = Path(jf.name)
+        for i, r in enumerate(rows):
+            obj = r.model_dump()
+            obj[_ORD] = i
+            jf.write(json.dumps(obj) + "\n")
+    try:
+        con = duckdb.connect()
+        con.execute(
+            f"COPY (SELECT * FROM read_json_auto('{bridge.as_posix()}', "
+            f"maximum_object_size=100000000)) TO '{tmp.as_posix()}' (FORMAT PARQUET)"
+        )
+    finally:
+        bridge.unlink(missing_ok=True)
+
+
+# --- atomic write ----------------------------------------------------------
+
+def _atomic(path: Path, write_fn) -> None:
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=path.suffix + ".tmp")
+    os.close(fd)
+    tmp = Path(tmp)
+    try:
+        write_fn(tmp)
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise

@@ -1,28 +1,30 @@
 import json
+import os
 from collections import Counter
+from pathlib import Path
 
 import typer
 
+from . import store
 from .config import load_config
 from .paths import GOLD_DIR, RAW_HVB
 from .schema import GoldRow
 
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
 
-GOLD_PATH = GOLD_DIR / "gold.jsonl"
+# On-disk gold format is a swappable detail behind semantic_poc.store — set
+# POC_GOLD_PATH to a .parquet path to run the pipeline off Parquet; defaults to
+# the human-friendly JSONL used during labeling.
+GOLD_PATH = Path(os.environ.get("POC_GOLD_PATH", GOLD_DIR / "gold.jsonl"))
 MANIFEST_PATH = GOLD_DIR / "partitions.json"
 
 
 def load_gold() -> list[GoldRow]:
-    with open(GOLD_PATH) as f:
-        return [GoldRow.model_validate_json(line) for line in f]
+    return store.load_gold(GOLD_PATH)
 
 
 def save_gold(rows: list[GoldRow]) -> None:
-    GOLD_DIR.mkdir(parents=True, exist_ok=True)
-    with open(GOLD_PATH, "w") as f:
-        for r in rows:
-            f.write(r.model_dump_json() + "\n")
+    store.save_gold(rows, GOLD_PATH)
 
 
 def _preserve_labeled(rows: list[GoldRow]) -> list[GoldRow]:
@@ -152,7 +154,7 @@ def train() -> None:
         exclusive_groups=policy_cfg["exclusive_groups"],
     )
     fixtures = build_fixtures(pol.rows, pol.X_sem, scorer)
-    path = export(models, families, policy_cfg, eval_summary, fixtures)
+    path = export(models, families, policy_cfg, eval_summary, fixtures, GOLD_PATH)
     typer.echo(f"artifact: {path}")
 
 

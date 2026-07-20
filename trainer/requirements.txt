@@ -5,3 +5,4 @@ pyyaml==6.0.3
 typer==0.26.8
 google-genai==2.11.0
 pytest==9.1.1
+duckdb==1.5.4
