@@ -29,8 +29,10 @@ from pathlib import Path
 
 from .schema import GoldRow
 
-_ORD = "_ord"  # hidden ordering column, internal to the parquet representation
+_ORD = "_ord"  # hidden ordering column, internal to the columnar representations
 _BATCH = 10_000
+_GOLD_TABLE = "gold"          # the rows, inside a .duckdb store
+_AUDIT_TABLE = "label_audit"  # in-file relabel history (id, ts, old, new, note)
 
 
 def content_sha256(path: str | Path) -> str:
@@ -57,6 +59,8 @@ def iter_gold(path: str | Path):
     path = Path(path)
     if path.suffix == ".parquet":
         yield from _iter_parquet(path)
+    elif path.suffix == ".duckdb":
+        yield from _iter_duckdb(path)
     else:
         yield from _iter_jsonl(path)
 
@@ -65,7 +69,8 @@ def save_gold(rows, path: str | Path) -> None:
     """Persist rows atomically (temp file + rename — never a half-written gold)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    writer = _write_parquet if path.suffix == ".parquet" else _write_jsonl
+    writer = {".parquet": _write_parquet, ".duckdb": _write_duckdb}.get(
+        path.suffix, _write_jsonl)
     _atomic(path, lambda tmp: writer(rows, tmp))
 
 
@@ -105,29 +110,103 @@ def _iter_parquet(path: Path):
             yield GoldRow.model_validate(dict(zip(keep, r)))
 
 
-def _write_parquet(rows, tmp: Path) -> None:
-    """Write rows to Parquet, adding `_ord` to preserve their exact order.
-
-    Bridges through a temp JSONL so DuckDB's `read_json_auto` infers the nested
-    schema (the `prev_caller_segment` struct and the list columns) for free —
-    keeping duckdb as the only extra dependency.
-    """
-    import duckdb
-
-    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", dir=tmp.parent, delete=False) as jf:
+def _bridge_jsonl(rows, dir_: Path) -> Path:
+    """Dump rows to a temp JSONL with an added `_ord`, so DuckDB's read_json_auto
+    infers the nested schema (prev_caller_segment struct, list columns) for free.
+    Shared by the Parquet and DuckDB writers — keeps duckdb the only extra dep."""
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", dir=dir_, delete=False) as jf:
         bridge = Path(jf.name)
         for i, r in enumerate(rows):
             obj = r.model_dump()
             obj[_ORD] = i
             jf.write(json.dumps(obj) + "\n")
+    return bridge
+
+
+def _write_parquet(rows, tmp: Path) -> None:
+    """Write rows to Parquet, adding `_ord` to preserve their exact order."""
+    import duckdb
+
+    bridge = _bridge_jsonl(rows, tmp.parent)
     try:
-        con = duckdb.connect()
-        con.execute(
+        duckdb.connect().execute(
             f"COPY (SELECT * FROM read_json_auto('{bridge.as_posix()}', "
             f"maximum_object_size=100000000)) TO '{tmp.as_posix()}' (FORMAT PARQUET)"
         )
     finally:
         bridge.unlink(missing_ok=True)
+
+
+# --- DuckDB database file (mutable working store) ---------------------------
+
+def _iter_duckdb(path: Path):
+    import duckdb
+
+    con = duckdb.connect(str(path), read_only=True)
+    try:
+        cols = [r[0] for r in con.execute(f"DESCRIBE {_GOLD_TABLE}").fetchall()]
+        order = f"ORDER BY {_ORD}" if _ORD in cols else ""
+        keep = [c for c in cols if c != _ORD]
+        sel = ", ".join(f'"{c}"' for c in keep)
+        cur = con.execute(f"SELECT {sel} FROM {_GOLD_TABLE} {order}")
+        while True:
+            batch = cur.fetchmany(_BATCH)
+            if not batch:
+                break
+            for r in batch:
+                yield GoldRow.model_validate(dict(zip(keep, r)))
+    finally:
+        con.close()
+
+
+def _write_duckdb(rows, tmp: Path) -> None:
+    """Write rows into a fresh .duckdb database: a `gold` table (with `_ord`) plus
+    an empty `label_audit` history table, so relabels are auditable in-file."""
+    import duckdb
+
+    tmp.unlink(missing_ok=True)  # mkstemp left an empty file; let duckdb create the db
+    bridge = _bridge_jsonl(rows, tmp.parent)
+    try:
+        con = duckdb.connect(str(tmp))
+        con.execute(
+            f"CREATE TABLE {_GOLD_TABLE} AS SELECT * FROM read_json_auto("
+            f"'{bridge.as_posix()}', maximum_object_size=100000000)"
+        )
+        con.execute(
+            f"CREATE TABLE {_AUDIT_TABLE} (id VARCHAR, ts VARCHAR, "
+            f"old_labels VARCHAR, new_labels VARCHAR, note VARCHAR)"
+        )
+        con.execute("CHECKPOINT")
+        con.close()
+    finally:
+        bridge.unlink(missing_ok=True)
+
+
+def relabel(path: str | Path, row_id: str, new_labels: list[str], note: str = "") -> None:
+    """Update one row's labels in a .duckdb gold store and record the change in
+    label_audit — same transaction, so history can never drift from the data.
+    row_id is 'conversation_id#turn_index'."""
+    import duckdb
+
+    conv, _, turn = row_id.rpartition("#")
+    con = duckdb.connect(str(path))
+    try:
+        con.execute("BEGIN")
+        old = con.execute(
+            f"SELECT labels FROM {_GOLD_TABLE} WHERE conversation_id=? AND turn_index=?",
+            [conv, int(turn)]).fetchone()
+        if old is None:
+            raise KeyError(f"no such row: {row_id}")
+        con.execute(
+            f"UPDATE {_GOLD_TABLE} SET labels=? WHERE conversation_id=? AND turn_index=?",
+            [new_labels, conv, int(turn)])
+        con.execute(
+            f"INSERT INTO {_AUDIT_TABLE} VALUES (?, now()::VARCHAR, ?, ?, ?)",
+            [row_id, json.dumps(old[0]), json.dumps(new_labels), note])
+        con.execute("COMMIT")
+        con.execute("CHECKPOINT")
+    finally:
+        con.close()
 
 
 # --- atomic write ----------------------------------------------------------
