@@ -25,6 +25,8 @@ import hashlib
 import json
 import os
 import tempfile
+from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .schema import GoldRow
@@ -207,6 +209,82 @@ def relabel(path: str | Path, row_id: str, new_labels: list[str], note: str = ""
         con.execute("CHECKPOINT")
     finally:
         con.close()
+
+
+# --- working-store verbs (snapshot / promote / counts) ---------------------
+
+def snapshot(src: str | Path, label: str = "") -> Path:
+    """Export a point-in-time Parquet copy of the gold store into a `snapshots/`
+    dir next to it: gold-<label>-<ts>.parquet. A restore point / open-format
+    archive / frozen-for-reproducibility training input — regenerable, NOT a
+    second source of truth. Streams, so it's cheap on a large store."""
+    src = Path(src)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    tag = f"{label}-" if label else ""
+    dst = src.parent / "snapshots" / f"gold-{tag}{ts}.parquet"
+    save_gold(iter_gold(src), dst)
+    return dst
+
+
+def promote(path: str | Path, intent: str, row_ids, note: str = "") -> int:
+    """Batch "easy add": add `intent` to the labels of every turn in row_ids
+    (union — multi-intent turns keep their other labels), auditing each change,
+    all in one transaction. row_ids are 'conversation_id#turn_index'. Returns how
+    many rows changed (already-labeled rows are skipped). Requires a .duckdb store."""
+    path = Path(path)
+    if path.suffix != ".duckdb":
+        raise ValueError("promote needs a mutable .duckdb store; label there, "
+                         "then snapshot to Parquet")
+    import duckdb
+
+    con = duckdb.connect(str(path))
+    changed = 0
+    try:
+        con.execute("BEGIN")
+        for rid in row_ids:
+            conv, _, turn = rid.rpartition("#")
+            row = con.execute(
+                f"SELECT labels FROM {_GOLD_TABLE} WHERE conversation_id=? AND turn_index=?",
+                [conv, int(turn)]).fetchone()
+            if row is None:
+                raise KeyError(f"no such row: {rid}")
+            old = list(row[0] or [])
+            if intent in old:
+                continue
+            new = sorted(set(old) | {intent})
+            con.execute(
+                f"UPDATE {_GOLD_TABLE} SET labels=? WHERE conversation_id=? AND turn_index=?",
+                [new, conv, int(turn)])
+            con.execute(
+                f"INSERT INTO {_AUDIT_TABLE} VALUES (?, now()::VARCHAR, ?, ?, ?)",
+                [rid, json.dumps(old), json.dumps(new), note or f"promote {intent}"])
+            changed += 1
+        con.execute("COMMIT")
+        con.execute("CHECKPOINT")
+    except BaseException:
+        con.execute("ROLLBACK")
+        raise
+    finally:
+        con.close()
+    return changed
+
+
+def counts(path: str | Path) -> dict:
+    """Label balance at a glance: positives per intent, OOS/labeled/total,
+    ambiguous, and a per-split breakdown. Backend-agnostic (streams)."""
+    per, by_split = Counter(), Counter()
+    total = oos = amb = 0
+    for r in iter_gold(path):
+        total += 1
+        by_split[r.split or "(unset)"] += 1
+        if r.ambiguous:
+            amb += 1
+        if r.labels:
+            per.update(r.labels)
+        else:
+            oos += 1
+    return {"total": total, "oos": oos, "labeled": total - oos, "ambiguous": amb,
+            "per_intent": dict(per.most_common()), "by_split": dict(by_split)}
 
 
 # --- atomic write ----------------------------------------------------------

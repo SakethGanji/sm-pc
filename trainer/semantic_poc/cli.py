@@ -45,6 +45,26 @@ def _preserve_labeled(rows: list[GoldRow]) -> list[GoldRow]:
 
 
 @app.command()
+def counts() -> None:
+    """Label balance of the gold store: positives per intent, OOS/total, splits."""
+    typer.echo(json.dumps(store.counts(GOLD_PATH), indent=1))
+
+
+@app.command()
+def snapshot(label: str = "") -> None:
+    """Export a labeled point-in-time Parquet snapshot of the gold store."""
+    typer.echo(f"snapshot -> {store.snapshot(GOLD_PATH, label)}")
+
+
+@app.command()
+def promote(intent: str, ids_file: str, note: str = "") -> None:
+    """Add `intent` to the turns listed in ids_file (one 'conv#turn' per line).
+    Needs POC_GOLD_PATH pointed at a .duckdb store."""
+    ids = [ln.strip() for ln in open(ids_file) if ln.strip()]
+    typer.echo(f"promoted {store.promote(GOLD_PATH, intent, ids, note)}/{len(ids)} rows to {intent}")
+
+
+@app.command()
 def ingest() -> None:
     """HVB corpus -> data/gold/gold.jsonl with weak turn labels."""
     from .ingest import ingest_corpus
