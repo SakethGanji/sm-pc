@@ -4,11 +4,20 @@ thresholds on the cleaned test split. Reports per-intent precision/recall and
 overall coverage at the maintained precision floor. This is the generalization
 number (thresholds certified on policy, evaluated once on held-out test).
 
+Test verdicts live at data/gold/test_verdicts.json (persistent, in-repo), format:
+  {"verdicts": [{"id": "<conversation_id>#<turn_index>", "label": "<intent>|none|ambiguous"}, ...]}
+If that file is absent, the eval still runs but against RAW (uncleaned) gold
+labels — clearly flagged — so the harness is never blocked. The cleaned number
+(the honest generalization figure) requires regenerating those verdicts via the
+dual-critic adjudication; see scripts/adj_prep.py + adj_apply.py for the method.
+
 Usage (from trainer/, venv activated):
-  python ../scripts/held_out_eval.py <artifact_name> [<artifact_name> ...]
+  python ../scripts/held_out_eval.py [<artifact_name> ...]   # defaults to newest artifact
+Override verdicts path with POC_TEST_VERDICTS=/path/to/verdicts.json
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -22,12 +31,21 @@ from semantic_poc.config import load_config
 from semantic_poc.context import build_c1
 from semantic_poc.embeddings import GeminiEmbedder
 from semantic_poc.features import TfIdf
-from semantic_poc.paths import ARTIFACTS_DIR
+from semantic_poc.paths import ARTIFACTS_DIR, GOLD_DIR
 from semantic_poc.runtime import Scorer, sigmoid
 from semantic_poc.policy import decide
 
 FLOOR = 0.90
-verdicts = {v["id"]: v["label"] for v in json.load(open("/tmp/adj-test/verdicts.json"))["verdicts"]}
+VERDICTS_PATH = Path(os.environ.get("POC_TEST_VERDICTS", GOLD_DIR / "test_verdicts.json"))
+
+if VERDICTS_PATH.exists():
+    verdicts = {v["id"]: v["label"] for v in json.loads(VERDICTS_PATH.read_text())["verdicts"]}
+    print(f"loaded {len(verdicts)} test verdicts from {VERDICTS_PATH}")
+else:
+    verdicts = {}
+    print(f"!! WARNING: no verdicts at {VERDICTS_PATH} — scoring against RAW gold "
+          f"labels (UNCLEANED). This understates coverage due to known test-label "
+          f"noise; it is NOT the certified generalization number.")
 
 # Clean test ground truth: adjudicated label wins; rows marked ambiguous are
 # dropped; 'none' -> negative. Rows without a verdict keep their gold label.
@@ -113,11 +131,22 @@ def eval_artifact(name):
             continue
         pos_h += per[i]["pos"]
         caught_h += per[i]["tp"]
+    frac = f"{caught_h/pos_h:.3f}" if pos_h else "n/a (no intent holds the floor)"
     print(f"  coverage on floor-holding intents only: {caught_h}/{pos_h} = "
-          f"{caught_h/pos_h:.3f} (dropped: {below})")
+          f"{frac} (dropped: {below})")
     return {"name": name, "coverage": caught / pos_tot, "below_floor": below,
             "coverage_floor_holding": caught_h / pos_h if pos_h else None}
 
 
-results = [eval_artifact(n) for n in sys.argv[1:]]
-json.dump(results, open("/tmp/held_out_results.json", "w"), indent=1)
+names = sys.argv[1:]
+if not names:
+    latest = sorted(ARTIFACTS_DIR.glob("artifact-*"), key=lambda p: p.stat().st_mtime)
+    if not latest:
+        sys.exit("no artifacts found — run `poc train` first")
+    names = [latest[-1].name]
+    print(f"no artifact given — evaluating newest: {names[0]}")
+
+results = [eval_artifact(n) for n in names]
+out_path = ARTIFACTS_DIR / "held_out_results.json"
+out_path.write_text(json.dumps(results, indent=1))
+print(f"\nresults -> {out_path}")

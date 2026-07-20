@@ -1,0 +1,229 @@
+{
+ "_meta": {
+  "source": "REGENERATED \u2014 single careful adjudicator, blind to model prediction and gold label. NOT the original /tmp dual-Sonnet-critic verdicts (unrecoverable). Covers only test rows where model disagreed with gold (42). Approximates, does not reproduce, the original held-out figure.",
+  "n": 42,
+  "labels": {
+   "ambiguous": 3,
+   "check_balance": 4,
+   "get_branch_hours": 8,
+   "order_checks": 6,
+   "pay_bill": 5,
+   "replace_card": 6,
+   "reset_password": 2,
+   "schedule_appointment": 3,
+   "transfer_money": 5
+  }
+ },
+ "verdicts": [
+  {
+   "id": "01cefd6f5c044a6f#6",
+   "label": "reset_password",
+   "caller": "i would like to reset my password"
+  },
+  {
+   "id": "0ade4b6adcf941f0#4",
+   "label": "get_branch_hours",
+   "caller": "uh what are the local branch hours"
+  },
+  {
+   "id": "0ceef853f1264ddf#8",
+   "label": "replace_card",
+   "caller": "i lost my card"
+  },
+  {
+   "id": "0ceef853f1264ddf#9",
+   "label": "replace_card",
+   "caller": "can you send me a new one"
+  },
+  {
+   "id": "12baa37d76334951#4",
+   "label": "transfer_money",
+   "caller": "hi my name is michael wilson i'd like to transfer money between my accounts"
+  },
+  {
+   "id": "1aae0815c5674b3b#2",
+   "label": "order_checks",
+   "caller": "hi my name is david jones i need a new checkbook"
+  },
+  {
+   "id": "1aae0815c5674b3b#5",
+   "label": "ambiguous",
+   "caller": "yeah oh i didn't i didn't even check book"
+  },
+  {
+   "id": "1c4c69c3dc3d470d#12",
+   "label": "ambiguous",
+   "caller": "uhm i'm sorry on it or do i need to check my account balance"
+  },
+  {
+   "id": "2453651cded5405a#2",
+   "label": "get_branch_hours",
+   "caller": "[noise] hi my name is james brown i'm just looking for the local branch of ours"
+  },
+  {
+   "id": "2d38cec732474a87#3",
+   "label": "order_checks",
+   "caller": "i need a new checkbook"
+  },
+  {
+   "id": "2e6fd1c2b31f46a4#6",
+   "label": "replace_card",
+   "caller": "hi my name is david brown i lost my card can you send me a new one"
+  },
+  {
+   "id": "3175d0f2f89b46df#3",
+   "label": "replace_card",
+   "caller": "hi my name is linda wilson i lost my card can you send me a new one"
+  },
+  {
+   "id": "37ea1d51317543e4#4",
+   "label": "reset_password",
+   "caller": "[noise] hi my name is james brown i would like to reset my password"
+  },
+  {
+   "id": "394728176d714fef#7",
+   "label": "check_balance",
+   "caller": "hi my name is jennifer miller i need to check my account balance"
+  },
+  {
+   "id": "429488b9c8934443#10",
+   "label": "schedule_appointment",
+   "caller": "schedule an appointment"
+  },
+  {
+   "id": "466b7f9ee32b438d#2",
+   "label": "get_branch_hours",
+   "caller": "[noise] what are your local branch hours"
+  },
+  {
+   "id": "4d84fb73a51549db#10",
+   "label": "schedule_appointment",
+   "caller": "scheduling an appointment"
+  },
+  {
+   "id": "663201e33f1a4e38#3",
+   "label": "transfer_money",
+   "caller": "hi my name is linda miller i would like to transfer money between my accounts"
+  },
+  {
+   "id": "6b405258c8ee4123#4",
+   "label": "schedule_appointment",
+   "caller": "hi my name is linda miller i would like to schedule an appointment"
+  },
+  {
+   "id": "713d96448ce84de1#7",
+   "label": "transfer_money",
+   "caller": "i would like to transfer money between my accounts"
+  },
+  {
+   "id": "7335a952d9204384#8",
+   "label": "pay_bill",
+   "caller": "hi my name is mary davis i would like to pay a bill"
+  },
+  {
+   "id": "7566f84c17404dba#4",
+   "label": "get_branch_hours",
+   "caller": "what is a local branch hours"
+  },
+  {
+   "id": "7a5d0bc4125a4f90#6",
+   "label": "get_branch_hours",
+   "caller": "what are the local branch hours"
+  },
+  {
+   "id": "7e3285db4e354e0b#6",
+   "label": "get_branch_hours",
+   "caller": "what are the local branch hours"
+  },
+  {
+   "id": "83dd44cab35f45aa#2",
+   "label": "get_branch_hours",
+   "caller": "hi my name is john williams what i'd a local branch hours"
+  },
+  {
+   "id": "86a9526e3ab84835#3",
+   "label": "pay_bill",
+   "caller": "my name is michael johnson i would like to pay a bill"
+  },
+  {
+   "id": "9d73e4ee8fb1425c#4",
+   "label": "order_checks",
+   "caller": "my name is mary garcia i need a new checkbook"
+  },
+  {
+   "id": "9d95586bb56b4e14#8",
+   "label": "order_checks",
+   "caller": "[noise] hi my name is mary miller i need any checkbook"
+  },
+  {
+   "id": "a28af719fef2475f#4",
+   "label": "pay_bill",
+   "caller": "hi my name's john jones i would like to pay a bill"
+  },
+  {
+   "id": "a48484835f124993#3",
+   "label": "replace_card",
+   "caller": "hi um my name is john brown i lost my debit card uh can you send me a new one"
+  },
+  {
+   "id": "a4986aa355e54d9d#8",
+   "label": "transfer_money",
+   "caller": "i would like to transfer money between my accounts"
+  },
+  {
+   "id": "a710797449904cc4#3",
+   "label": "transfer_money",
+   "caller": "hi my name is david smith i would like to transfer money between my accounts"
+  },
+  {
+   "id": "b08aa4e85f94447a#8",
+   "label": "check_balance",
+   "caller": "i need to check my account balance"
+  },
+  {
+   "id": "b56c086396214120#3",
+   "label": "get_branch_hours",
+   "caller": "what is the branch hour"
+  },
+  {
+   "id": "ba08e797ca9e4019#4",
+   "label": "pay_bill",
+   "caller": "hi my name is linda jones i would like to pay a bill"
+  },
+  {
+   "id": "bcc69e644ea447bb#4",
+   "label": "replace_card",
+   "caller": "hi my name is james brown i lost my debit card can you send me a new one"
+  },
+  {
+   "id": "c026a81022514035#3",
+   "label": "order_checks",
+   "caller": "hi my name is latrice seattle to ratio i need a new check will"
+  },
+  {
+   "id": "ce1c6a188b854181#2",
+   "label": "check_balance",
+   "caller": "[noise] hi my name is linda wilson i need to check my account balance"
+  },
+  {
+   "id": "d26dfb6bfcb34356#2",
+   "label": "order_checks",
+   "caller": "hi my name is linda miller i need a new checkbook"
+  },
+  {
+   "id": "ec7454a2ccc34edc#4",
+   "label": "check_balance",
+   "caller": "hi my name is james williams i need to check my account balance"
+  },
+  {
+   "id": "edede009f53d4ebc#3",
+   "label": "pay_bill",
+   "caller": "[noise] hi my name is michael davis i'd like to pay a bill"
+  },
+  {
+   "id": "faf12706cc9245f5#5",
+   "label": "ambiguous",
+   "caller": "can you send me a new one"
+  }
+ ]
+}

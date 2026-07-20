@@ -1,5 +1,5 @@
 data/raw/
-data/gold/
+data/gold/*
 data/cache/
 artifacts/
 .venv/
@@ -10,3 +10,6 @@ __pycache__/
 logs/
 .claude/
 challenger-env/
+
+# curated eval ground truth — small, version it (bulk gold stays ignored)
+!data/gold/test_verdicts.json
