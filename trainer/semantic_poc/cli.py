@@ -201,11 +201,21 @@ def partition() -> None:
 
 
 @app.command()
-def adjudicate(verdicts_file: str) -> None:
+def adjudicate(intent: str, verdicts_file: str) -> None:
     """Merge adjudicated verdicts (lines: 'conv_id#turn_index<TAB>yes|no') into
-    gold labels. yes -> the session task intent; no -> no actionable intent.
-    Adjudicated rows lose their ambiguous flag (adjudication is ground truth)."""
+    gold labels. yes -> `intent`; no -> no actionable intent. Adjudicated rows
+    lose their ambiguous flag (adjudication is ground truth).
+
+    `intent` is explicit and validated against the taxonomy. It used to be taken
+    from the row's `session_task_intent`, which only worked while ingest seeded
+    that field from call-level metadata; with it defaulting to "" a `yes` verdict
+    would silently write the label [""]."""
     import shutil
+
+    valid = load_config("taxonomy")["intents"]
+    if intent not in valid:
+        raise typer.BadParameter(
+            f"unknown intent {intent!r}; taxonomy has: {', '.join(sorted(valid))}")
 
     verdicts: dict[str, str] = {}
     with open(verdicts_file) as f:
@@ -227,7 +237,7 @@ def adjudicate(verdicts_file: str) -> None:
         stats["unmatched"] -= 1
         was_positive = bool(r.labels)
         if v == "yes":
-            r.labels = [r.session_task_intent]
+            r.labels = [intent]
             stats["kept_yes" if was_positive else "promoted"] += 1
         else:
             r.labels = []

@@ -98,17 +98,22 @@ a dormant code path that would start silently writing labels the moment anyone
 populated `dialog_acts` with something. Labels come from the human-gated
 labeling step (§6) and from nowhere else.
 
-### Traps in the existing code
+### A trap that was already fixed — don't re-break it
 
-**`poc adjudicate` is rehearsal-specific and currently unsafe.** At
-`cli.py:230` it does `r.labels = [r.session_task_intent]` — a "yes" verdict
-meant "apply this call's task type," which only made sense when ingest seeded
-that field. Once `session_task_intent` defaults to `""`, a `yes` verdict assigns
-the label `[""]`: no crash, silently corrupted labels.
+`poc adjudicate` used to read `r.labels = [r.session_task_intent]`, which only
+worked while ingest seeded that field from call-level metadata. With
+`session_task_intent` defaulting to `""` (change #5 above), a `yes` verdict would
+have silently written the label `[""]` — no crash, corrupted labels.
 
-It is **not** part of the port and you should not run it. Do not try to fix it
-either — flag it in your report. It will either be removed or reworked to take
-an explicit intent argument, and that is a separate decision.
+It now takes an explicit, taxonomy-validated intent:
+
+```sh
+poc adjudicate <intent> <verdicts.tsv>     # lines: conv_id#turn_index<TAB>yes|no
+```
+
+Nothing further is needed here. It is not part of the port and you should not
+run it — the note exists so the signature change isn't mistaken for a bug and
+reverted.
 
 Our corpus details are provided separately; see §10 for what you must establish
 before writing any code. Changing how embeddings are fetched is a **separate**
