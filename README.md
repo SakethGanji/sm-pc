@@ -67,7 +67,7 @@ mean a new artifact. Raw ASR text is never cleaned.
 - **[docs/office-playbook.md](docs/office-playbook.md)** — the full method + reasoning.
 - **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — this rehearsal's result (GREEN, 0.92 held-out).
 - **[docs/design-doc.md](docs/design-doc.md)** — the work spec this rehearses.
-- **[port-template/](port-template/)** — fill-in-the-blanks stubs + sample data + smoke test.
+- **[docs/gold-schema.md](docs/gold-schema.md)** — gold DuckDB schema + how to add/label rows (start here for the port).
 - [docs/synthetic-data-plan.md](docs/synthetic-data-plan.md) — record of the synthetic-data experiment (tried, null result, dropped).
 
 Serve: `cd trainer && source .venv/bin/activate && python ../scripts/serve_py.py`.

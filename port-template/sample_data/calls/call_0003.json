@@ -1,7 +1,0 @@
-[
-  {"speaker": "agent",    "asr_text": "how can i help you today",                              "human_text": "how can i help you today",                              "start_ms": 800,  "duration_ms": 1500, "tags": ["greeting"]},
-  {"speaker": "customer", "asr_text": "how are you doing today",                                "human_text": "how are you doing today",                                "start_ms": 2600, "duration_ms": 1400, "tags": []},
-  {"speaker": "agent",    "asr_text": "i am well thank you what can i do for you",             "human_text": "i am well thank you what can i do for you",             "start_ms": 4200, "duration_ms": 2000, "tags": []},
-  {"speaker": "customer", "asr_text": "yea i just wanted to know the local branch ours",       "human_text": "yeah i just wanted to know the local branch hours",     "start_ms": 6500, "duration_ms": 2300, "tags": []},
-  {"speaker": "customer", "asr_text": "okay thank you so much that is all",                     "human_text": "okay thank you so much that is all",                     "start_ms": 9200, "duration_ms": 1700, "tags": []}
-]
