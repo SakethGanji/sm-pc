@@ -66,18 +66,49 @@ corpus-specific assumptions past that boundary is a bug.
 
 A sample CSV of our corpus is provided. Map it onto `GoldRow`.
 
-| File | Change | Size |
-|---|---|---|
-| `trainer/semantic_poc/ingest.py` | **Rewrite the body.** Read our CSV → one `GoldRow` per CUSTOMER turn, `labels=[]` | the real work |
-| `trainer/semantic_poc/paths.py` | Repoint the raw-corpus constant (currently `RAW_HVB`) at our CSV under `data/raw/`. Rename it `RAW_CORPUS` and update its importers | 1 line + refs |
-| `trainer/semantic_poc/cli.py` | Wire the `ingest()` command to your new function signature | ~1 line |
-| `configs/taxonomy.yaml` | Our real intents + family roll-up. Add a `desc:` line per intent — the auto-labeler reads these | a list |
-| `trainer/semantic_poc/schema.py` | Give `dialog_acts` and `session_task_intent` defaults (`[]` and `""`) so rows validate without them | 2 lines |
-| `trainer/semantic_poc/weak_labels.py` | Drop the call from ingest; the file can go. It derives labels from per-turn dialog-act metadata our corpus does not have | delete |
+Exactly six files change. Line numbers are current as of this writing.
 
-Nothing else should need to change. **If a task seems to require editing
-`train.py`, `policy.py`, `runtime.py`, `features.py`, or `store.py`, stop and
-ask** — that means the ingest boundary is being violated.
+| # | File | Change |
+|---|---|---|
+| 1 | `trainer/semantic_poc/ingest.py` | **Rewrite the body.** Read our CSV → one `GoldRow` per CUSTOMER turn, `labels=[]`. Also remove the `weak_labels` import (`:31`) and call (`:100`), and drop the now-unused `task_type_map` parameter (`:34`, `:47`, `:50`) |
+| 2 | `trainer/semantic_poc/paths.py` | `RAW_HVB` (`:8`) → rename `RAW_CORPUS`, repointed at our CSV under `data/raw/` |
+| 3 | `trainer/semantic_poc/cli.py` | Two lines: the import (`:20`) and the `ingest_corpus(...)` call (`:83`, which currently passes `taxonomy["task_type_map"]`) |
+| 4 | `configs/taxonomy.yaml` | Our real intents + family roll-up. Add a `desc:` line per intent — the auto-labeler reads these. Delete `task_type_map` (`:13`) |
+| 5 | `trainer/semantic_poc/schema.py` | Give `dialog_acts` and `session_task_intent` defaults (`[]` and `""`, `:30-31`) so rows validate without them |
+| 6 | `trainer/semantic_poc/weak_labels.py` | **Delete the file** (see below for why) |
+
+Everything else stays untouched — `store.py`, `partitions.py`, `train.py`,
+`features.py`, `runtime.py`, `policy.py`, `artifact.py`, `embeddings.py`,
+`context.py`, `stitch.py`, `config.py`. That is the `GoldRow` seam working as
+designed. **If a task seems to require editing any of them, stop and ask** —
+that means the ingest boundary is being violated.
+
+### Why `weak_labels.py` is deleted, not ported
+
+It assigns turn-level labels inside ingest by a two-part heuristic: find the
+first caller turn tagged with a request-bearing **dialog act**, then label it
+with the call-level **`session_task_intent`**. Our corpus has neither field, so
+the function is inert — `is_request_bearing()` would return `False` for every
+turn and every row would end up `labels=[]` regardless.
+
+But "harmless no-op" is not why it goes. It goes because it **violates ingest
+contract rule 4: ingest never assigns a label.** It existed only to synthesize
+labels for a rehearsal that had no human labelers, and leaving it in place keeps
+a dormant code path that would start silently writing labels the moment anyone
+populated `dialog_acts` with something. Labels come from the human-gated
+labeling step (§6) and from nowhere else.
+
+### Traps in the existing code
+
+**`poc adjudicate` is rehearsal-specific and currently unsafe.** At
+`cli.py:230` it does `r.labels = [r.session_task_intent]` — a "yes" verdict
+meant "apply this call's task type," which only made sense when ingest seeded
+that field. Once `session_task_intent` defaults to `""`, a `yes` verdict assigns
+the label `[""]`: no crash, silently corrupted labels.
+
+It is **not** part of the port and you should not run it. Do not try to fix it
+either — flag it in your report. It will either be removed or reworked to take
+an explicit intent argument, and that is a separate decision.
 
 Our corpus details are provided separately; see §10 for what you must establish
 before writing any code. Changing how embeddings are fetched is a **separate**
