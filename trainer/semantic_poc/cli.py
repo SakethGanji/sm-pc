@@ -1,3 +1,13 @@
+"""`poc` command-line entry point — the runner for every pipeline stage.
+
+Installed as the console command `poc` (pyproject: poc = "semantic_poc.cli:app").
+Run stages with `poc <command>` (e.g. `poc ingest`, `poc train`); see `poc --help`.
+Each `@app.command()` below is one subcommand. The whole gold dataset flows
+through `load_gold`/`save_gold`, which delegate to `semantic_poc.store` — so the
+on-disk format is chosen by `POC_GOLD_PATH` (.duckdb / .parquet / .jsonl), default
+JSONL. Pipeline order: ingest -> (label via promote) -> partition -> train -> serve.
+"""
+
 import json
 import os
 from collections import Counter

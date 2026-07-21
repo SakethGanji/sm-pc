@@ -30,6 +30,9 @@ class Split:
 
 
 def build_split(rows: list[GoldRow], intents: list[str], tfidf: TfIdf, embedder) -> Split:
+    """Featurize a set of rows: semantic embeddings (Gemini over the C1 context
+    string), lexical TF-IDF over raw text, small meta features, the (n, K) binary
+    label matrix, and per-row conversation groups (so CV folds never split a call)."""
     texts_c1 = [build_c1(r.previous_agent_utterance, r.raw_transcript) for r in rows]
     X_sem = embedder.embed(texts_c1, progress=True).astype(np.float64)
     X_lex = tfidf.transform([r.raw_transcript for r in rows]).astype(np.float64)
@@ -73,6 +76,8 @@ def sweep_and_oof(X, y_all: np.ndarray, groups: np.ndarray, intents: list[str]):
 
 
 def fit_branch_full(X, y_all, intents, best_cs):
+    """Retrain one one-vs-rest branch on the FULL split (one LR per intent, using
+    that intent's swept C). Returns stacked (coef, intercept) matrices."""
     coefs, ints = [], []
     for k, _ in enumerate(intents):
         m = _fit_lr(X, y_all[:, k], best_cs[k])
@@ -82,6 +87,8 @@ def fit_branch_full(X, y_all, intents, best_cs):
 
 
 def fit_fusion(oof_sem, oof_lex, meta, y_all, intents):
+    """Fuse the branches: a per-intent LR over [sem_logit, lex_logit, meta].
+    Trained on OUT-OF-FOLD branch logits so the fusion doesn't see in-fold leakage."""
     F = np.hstack([oof_sem, oof_lex, meta])
     return fit_branch_full(F, y_all, intents, [1.0] * len(intents))
 
@@ -94,6 +101,8 @@ def branch_logits(coef, intercept, X) -> np.ndarray:
 
 
 def fused_logits(models: "Trained", split: Split) -> np.ndarray:
+    """Full forward pass for a split: both branch logits -> fused logits (pre-Platt).
+    The serving path in runtime.py mirrors this exactly."""
     sem = branch_logits(models.sem_coef, models.sem_int, split.X_sem)
     lex = branch_logits(models.lex_coef, models.lex_int, split.X_lex)
     F = np.hstack([sem, lex, split.meta])
