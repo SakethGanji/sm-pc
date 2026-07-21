@@ -79,6 +79,10 @@ Nothing else should need to change. **If a task seems to require editing
 `train.py`, `policy.py`, `runtime.py`, `features.py`, or `store.py`, stop and
 ask** — that means the ingest boundary is being violated.
 
+Our corpus details are provided separately; see §10 for what you must establish
+before writing any code. Changing how embeddings are fetched is a **separate**
+task with its own details still to come — see §7. Do not bundle the two.
+
 ### The ingest contract — five rules, none optional
 
 1. **One row per CUSTOMER turn.** Agent turns are *not* rows. An agent turn's
@@ -312,6 +316,51 @@ new artifact. That is the provenance guarantee — don't work around it.
 `exclusive_groups` lists sibling intents that must not co-fire; within a group
 only the argmax survives. Currently empty.
 
+### Embedding provider — a second, separate task
+
+**Our organization does not call the embedding API the way this code currently
+does.** The details of our endpoint will be provided separately. Do not change
+anything here until you have them, and treat this as a task distinct from the
+ingest port — do not bundle the two.
+
+When you do have the details, the change is deliberately contained:
+
+**The seam is one method: `GeminiEmbedder._fetch_batch` in
+`trainer/semantic_poc/embeddings.py`.** Replace its body. Everything else in that
+file — the sqlite cache, dedup, order preservation, batching, retry/backoff — is
+provider-agnostic and must not change.
+
+Its contract:
+
+```python
+def _fetch_batch(self, texts: list[str]) -> list[np.ndarray]:
+    # one vector per input text, SAME ORDER,
+    # dtype float32, length == self.dim, L2-normalized
+```
+
+Invariants that must hold in any replacement:
+
+1. **Keep the L2 normalization.** Downstream math assumes unit vectors, and
+   normalizing here means nothing depends on whether the provider normalizes.
+2. **Keep `float32`.** That is what the cache blobs store; training widens to
+   float64 later.
+3. **Keep the retry/backoff loop.** Internal gateways rate-limit and return
+   transient 5xx too.
+4. **Preserve input order.** Callers zip results back against their inputs.
+
+**The cache-poisoning trap.** The cache key is
+`sha256(f"{model}|{task_type}|{dim}|{text}")` — it does **not** include the
+provider. Pointing `_fetch_batch` at a different endpoint while leaving
+`configs/embedding.yaml`'s `model:` string unchanged means every previously
+cached vector is a silent hit, and training would mix two providers' embeddings
+with no error raised. When switching provider: change the `model:` string to
+something provider-qualified **and** delete `data/cache/embeddings.sqlite`.
+
+**Switching provider invalidates any trained artifact.** The embedding is the
+model's input space; a different provider is a different space, so coefficients,
+calibration, and thresholds are all void and everything must be re-embedded and
+retrained. Flag this rather than assuming an existing artifact still applies.
+
 ---
 
 ## 8. Context that will save you from bad suggestions
@@ -346,29 +395,49 @@ family, unsure leaf" actually occurs.
 
 ---
 
-## 10. Corpus specifics
+## 10. Corpus specifics — to be provided
 
-<!-- FILL IN before starting. Describe the sample CSV: file location, one row
-     per what, exact column names, how customer vs agent turns are distinguished,
-     timestamp units and origin, conversation boundary field, whether a corrected
-     transcript exists, whether ASR confidence is present. -->
+A sample CSV and a description of our corpus will be given to you separately.
+This section is intentionally open: **do not assume a shape, and do not infer one
+from the rehearsal code you find in `ingest.py`.** That body reads a completely
+different source and is reference only.
 
-- Sample CSV location:
-- One row per:
-- Column names and meanings:
-- Customer vs agent turn is identified by:
-- Timestamp column, units, and epoch:
-- Conversation boundary field:
-- Corrected/human transcript available:
-- ASR confidence available:
+Before writing any code, establish answers to all of the following. Inspect the
+sample for what you can determine yourself; **ask for anything you cannot
+confirm.** Guessing here produces a pipeline that runs and is silently wrong —
+which is far worse than a pipeline that fails.
 
-**Before writing code**, inspect the sample and show the proposed field-by-field
-mapping onto `GoldRow` for review. Ask about anything ambiguous — especially
-speaker identification, timestamp units, and conversation boundaries. Guessing
-there produces a pipeline that runs and is silently wrong.
+| Must establish | Why it matters |
+|---|---|
+| File location and format | — |
+| One row per *what* — turn, segment, utterance, or call | Determines whether you group, split, or map 1:1 |
+| Exact column names and meanings | — |
+| **How a customer turn is distinguished from an agent turn** | Getting this backwards produces a model trained on the wrong speaker. Highest-risk item |
+| Timestamp column, units (s / ms / µs), and epoch | Drives time-ordered splits; wrong units silently scramble split order |
+| Conversation boundary field | A whole call must stay in one split. Wrong grouping means leakage and inflated scores |
+| Whether turns are already in chronological order, or need sorting | `turn_index` must reflect true order |
+| Whether a corrected/human transcript exists | If not, copy `raw_transcript` into `human_transcript` |
+| Whether ASR confidence is present | Logged upstream, never gates a decision. Optional |
+| How to tell a *split* customer segment from a new turn | Governs whether `prev_caller_segment` is populated |
+
+**Then, before writing code:** present the proposed field-by-field mapping onto
+`GoldRow` (§3) and get it confirmed. State explicitly which fields you inferred
+from the sample versus which you were told, and flag anything you are less than
+confident about.
+
+**Sanity checks to run on your own output before reporting:**
+
+- Row count equals the number of customer turns, not total turns
+- `conversation_id` cardinality matches the number of calls in the sample
+- `turn_index` is strictly increasing within each conversation
+- `previous_agent_utterance` is non-empty for a plausible majority of rows — if
+  it is empty nearly everywhere, speaker identification is probably wrong
+- `timestamp_ms` values are plausible epoch milliseconds (13 digits for recent
+  dates), and ordering by them reproduces conversation order
+- Every row has `labels == []`
 
 **Definition of done for the port:** `poc ingest && poc counts` runs clean, and
-you report the counts output plus 3 sample `GoldRow`s. Expected shape of a
-correct first run: `total` = number of customer turns, `oos` ≈ `total`,
-`labeled` = 0, and the intents from `taxonomy.yaml` listed with zero positives.
-Stop there and report before anything else runs.
+you report the counts output plus 3 sample `GoldRow`s and the checks above.
+Expected shape of a correct first run: `total` = number of customer turns,
+`oos` ≈ `total`, `labeled` = 0, and the intents from `taxonomy.yaml` listed with
+zero positives. Stop there and report before anything else runs.
