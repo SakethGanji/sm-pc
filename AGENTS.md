@@ -83,6 +83,37 @@ Our corpus details are provided separately; see §10 for what you must establish
 before writing any code. Changing how embeddings are fetched is a **separate**
 task with its own details still to come — see §7. Do not bundle the two.
 
+### How far you can validate — read this before planning
+
+**You have no access to the embedding API or any LLM call.** That is a hard
+environment limit, not a permission you can request. It bounds what you can run:
+
+| Stage | You | Why |
+|---|---|---|
+| `poc ingest` | **run it** | pure local file reading |
+| `poc counts` | **run it** | reads the store, no network |
+| `poc partition` | **run it** | pure local computation |
+| `pytest` (from `trainer/`) | **run it** | all pure functions, no key needed |
+| `scripts/autolabel.py` | **cannot** | LLM calls |
+| `poc train` | **cannot** | embeds every row via the API |
+| `scripts/serve_py.py`, `poc replay`, `held_out_eval.py` | **cannot** | need an artifact, which needs training |
+
+So your job is to get the **local** part of the flow completely working and
+verified, and hand the rest back. Do not fake, stub, mock, or monkey-patch the
+embedding layer to get further — a pipeline that "runs" on synthetic vectors
+proves nothing and risks a fake artifact being mistaken for a real one.
+
+When you have taken it as far as it goes, report:
+
+1. Confirmation that `poc ingest`, `poc counts`, `poc partition`, and `pytest`
+   all run clean, with their output
+2. The exact commands to run next, in order, for the stages you could not reach
+3. Anything you could not verify and what specifically you would check about it
+
+Do not treat the unreachable stages as failures or try to work around them.
+Getting ingest, the schema, the taxonomy, and the splits correct **is** the
+deliverable.
+
 ### The ingest contract — five rules, none optional
 
 1. **One row per CUSTOMER turn.** Agent turns are *not* rows. An agent turn's
@@ -144,31 +175,33 @@ Example of a negative and a positive row:
 
 ## 4. Rules that must not be broken
 
-1. **Never run `poc train` unless explicitly asked.** It sends every train,
-   calibration, and policy row to the Gemini embedding API and costs real money.
-   Results cache by text hash so re-runs are free, but the first run on a full
-   corpus is not.
-2. **Never run `scripts/autolabel.py` unless explicitly asked.** Same reason.
-3. **`poc partition` must run before any auto-labeling**, and auto-labeling must
+1. **Never run `poc train`.** It sends every train, calibration, and policy row
+   to the embedding API and costs real money. It is also outside your
+   environment's reach (§3).
+2. **Never run `scripts/autolabel.py`.** Same reason.
+3. **Never fake, stub, or mock the embedding layer** to get past those limits.
+   A pipeline that runs on synthetic vectors validates nothing and risks a
+   meaningless artifact being taken for a real one.
+4. **`poc partition` must run before any auto-labeling**, and auto-labeling must
    be invoked with `--skip-split test`. The test split is the only honest number
    this project will produce. An LLM that writes labels onto test rows destroys it
    silently and unrecoverably.
-4. **Ingest the WHOLE corpus before `poc partition` runs.** Partition freezes the
+5. **Ingest the WHOLE corpus before `poc partition` runs.** Partition freezes the
    test set by time. Ingesting more data later and re-partitioning changes the
    test set and voids the "touched once" guarantee.
-5. **Never invent, infer, or synthesize labels** to make a step run or a number
+6. **Never invent, infer, or synthesize labels** to make a step run or a number
    look better. `labels: []` is meaningful data, not a missing value.
-6. **Do not evaluate against the test split while iterating.** Use `calibration`
+7. **Do not evaluate against the test split while iterating.** Use `calibration`
    and `policy`. Test is read once, for reporting.
-7. **Do not weaken `configs/policy.yaml` floors** (`precision_floor`,
+8. **Do not weaken `configs/policy.yaml` floors** (`precision_floor`,
    `accept_floor`, `tau_low`) to improve a metric. They are precommitted safety
    parameters.
-8. **Do not commit data.** `.gitignore` excludes `data/raw/`, `data/gold/*`,
+9. **Do not commit data.** `.gitignore` excludes `data/raw/`, `data/gold/*`,
    `data/cache/`, `artifacts/`, `.venv/`. Customer transcripts stay local.
    Put our CSV in `data/raw/`.
-9. **Do not modify `data/gold/test_verdicts.json`** — curated human ground truth,
+10. **Do not modify `data/gold/test_verdicts.json`** — curated human ground truth,
    version-controlled deliberately.
-10. **Synthetic or augmented rows, if ever added, are train-only forever.**
+11. **Synthetic or augmented rows, if ever added, are train-only forever.**
     Precision floors are certified on real data only.
 
 ---
