@@ -211,6 +211,47 @@ def relabel(path: str | Path, row_id: str, new_labels: list[str], note: str = ""
         con.close()
 
 
+def mark_ambiguous(path: str | Path, row_ids, ambiguous: bool = True,
+                   note: str = "") -> int:
+    """Set the `ambiguous` flag on rows (excludes them from train AND eval) and
+    audit each change. Used by the autolabeler for critic disagreements. row_ids
+    are 'conversation_id#turn_index'. Returns how many rows changed."""
+    path = Path(path)
+    if path.suffix != ".duckdb":
+        raise ValueError("mark_ambiguous needs a mutable .duckdb store")
+    import duckdb
+
+    con = duckdb.connect(str(path))
+    changed = 0
+    try:
+        con.execute("BEGIN")
+        for rid in row_ids:
+            conv, _, turn = rid.rpartition("#")
+            row = con.execute(
+                f"SELECT ambiguous FROM {_GOLD_TABLE} WHERE conversation_id=? AND turn_index=?",
+                [conv, int(turn)]).fetchone()
+            if row is None:
+                raise KeyError(f"no such row: {rid}")
+            if bool(row[0]) == ambiguous:
+                continue
+            con.execute(
+                f"UPDATE {_GOLD_TABLE} SET ambiguous=? WHERE conversation_id=? AND turn_index=?",
+                [ambiguous, conv, int(turn)])
+            con.execute(
+                f"INSERT INTO {_AUDIT_TABLE} VALUES (?, now()::VARCHAR, ?, ?, ?)",
+                [rid, f"ambiguous={row[0]}", f"ambiguous={ambiguous}",
+                 note or "mark_ambiguous"])
+            changed += 1
+        con.execute("COMMIT")
+        con.execute("CHECKPOINT")
+    except BaseException:
+        con.execute("ROLLBACK")
+        raise
+    finally:
+        con.close()
+    return changed
+
+
 # --- working-store verbs (snapshot / promote / counts) ---------------------
 
 def snapshot(src: str | Path, label: str = "") -> Path:

@@ -121,7 +121,9 @@ All exposed as `store.*` functions and `poc` subcommands
 | Command | What it does |
 |---|---|
 | `poc counts` | positives per intent, OOS / labeled / total, ambiguous, per-split — check balance |
+| `python scripts/autolabel.py` | LLM dual-critic bulk labeling; agreements → promote, `none` → OOS, disagreements → ambiguous |
 | `poc promote <intent> <ids.txt>` | add `<intent>` to each `conv#turn` listed (union, audited, one txn); idempotent |
+| `store.mark_ambiguous(path, ids, note)` | flag rows `ambiguous` (excluded from train + eval), audited |
 | `poc snapshot --label <name>` | write a Parquet restore point into `snapshots/` |
 | `store.relabel(path, "conv#turn", labels, note)` | set a row's labels exactly (fix a mistake), audited |
 | `poc partition` | assign `split` (whole call stays in one split) |
@@ -148,6 +150,7 @@ mechanism.
 |---|---|
 | `e2e_once.sh` | full smoke test: train → unit tests → serve → replay |
 | `serve_py.py` | Python inference server (loads one artifact) |
+| `autolabel.py` | LLM dual-critic bulk auto-labeling into the store (Gemini Flash) |
 | `held_out_eval.py` | cleaned held-out evaluation (importable; used by the stability report) |
 | `stability_report.py` | per-intent metrics tracked run-over-run; regression gate |
 

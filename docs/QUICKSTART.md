@@ -37,18 +37,30 @@ poc counts      # SANITY: total = your turn count, oos ≈ total, labeled = 0, y
 If `counts` looks wrong (missing turns, labels already set, wrong intents), fix
 `ingest.py` before going further.
 
-## 3. Label your first intent
-1. From your call-level flags, pull the calls tagged with intent #1.
-2. Identify the request turns; write their ids (`conversation_id#turn_index`, one
-   per line) to `ids.txt`.
-3. Promote them:
+## 3. Label — two ways (pick one, or mix)
+
+**A. LLM auto-label (bulk, recommended accelerator).** Dual Gemini critics label
+every unlabeled turn across all intents at once; `none` becomes your OOS pool for
+free; disagreements are quarantined `ambiguous`.
 ```bash
-poc promote card_status ids.txt   # unions the intent onto those turns (audited, in-file)
-poc counts                        # card_status should now show your batch size
+poc snapshot --label pre-autolabel           # restore point first
+python ../scripts/autolabel.py --dry-run --limit 50   # preview: agreement rate + counts
+python ../scripts/autolabel.py                # apply to all unlabeled turns
+poc counts                                    # positives per intent + OOS should populate
 ```
-**Also build the OOS pool:** make sure plenty of turns from *other* call types sit
-at `labels=[]` — those are your representative negatives. Without them, precision
-is fake.
+Guardrails: LLM labels are a first pass, not truth — **spot-check them, and after
+`poc partition` HUMAN-VERIFY the test-split positives** (never trust an auto-labeled
+eval set). Adding a one-line `desc:` per intent in `taxonomy.yaml` improves accuracy.
+
+**B. Manual promote (small / targeted).** Pull the calls tagged with an intent,
+write the request turns' ids (`conversation_id#turn_index`, one per line) to
+`ids.txt`, then:
+```bash
+poc promote card_status ids.txt   # unions the intent onto those turns (audited)
+```
+
+Either way, make sure plenty of turns from *other* call types sit at `labels=[]` —
+those are your representative negatives (auto-label produces them as `none`).
 
 ## 4. Train + read the number
 ```bash
