@@ -9,12 +9,12 @@ this one file right and the rest of the pipeline "just works".
 
 The body below is the Harper Valley (HVB) rehearsal reference: it reads a folder
 of per-call metadata + transcript JSON. To port, REPLACE the body to read YOUR
-source (e.g. a CSV — see ../docs/gold-schema.md for the column contract) and emit
+source (e.g. a CSV — see ../../AGENTS.md §3 for the column contract) and emit
 the same `GoldRow`s. Then point `paths.py` at your data and wire `cli.py`'s
 `ingest()` to call this. Run it with `poc ingest` (never `python ingest.py` — the
 relative imports need the package context).
 
-The contract every row must honor (full column defs: ../docs/gold-schema.md):
+The contract every row must honor (full column defs: ../../AGENTS.md §3):
   * ONE row per CUSTOMER turn. Agent turns are context, not rows — their text
     rides along on the next customer turn as `previous_agent_utterance`.
   * `raw_transcript` is UNCLEANED ASR. You serve on raw, so you train/eval on raw.

@@ -75,11 +75,16 @@ answer, with safety built in:
 - **`tau_low`:** if nothing clears a minimum confidence → `no_supported_intent`.
 - **Exclusive groups:** within a family, only the argmax fires (siblings don't co-fire).
 - **`max_accepted`:** cap how many intents a single turn can carry.
-- **Family fallback / abstain:** confident it's a *card* issue but unsure which action →
-  suggest the family; genuinely ambiguous → abstain and hand off.
+- **Abstain:** genuinely ambiguous (above `tau_low`, but nothing clears its
+  certified threshold) → abstain and hand off.
 
-The output is one of: accepted intent(s), a family suggestion, `abstained`, or
-`no_supported_intent`.
+The output is one of: accepted intent(s), `abstained`, or `no_supported_intent`.
+
+> A **family fallback** — confident it's a *card* issue but unsure which action,
+> so suggest the family — is a design option that is **not implemented**.
+> `policy.py` uses the family map only to annotate `main_intent` on the output.
+> Deferred until real data shows how often "confident family, unsure leaf"
+> occurs.
 
 ## How it's trained
 
@@ -147,8 +152,8 @@ and returns `no_supported_intent` — the model correctly stays silent.
 - **Calibration separate from scoring:** you can't set safe thresholds on uncalibrated
   scores.
 - **Thresholds + policy separate from the model:** safety (precision floor, abstain,
-  family fallback, no-co-fire) is a governed decision layer, not something the classifier
-  is trusted to get right implicitly.
+  no-co-fire) is a governed decision layer, not something the classifier is trusted
+  to get right implicitly.
 - **One embedding call regardless of intent count:** 8 or 200 intents is the same single
   embed + a taller matmul — latency is embedding-bound and ~constant, which is what makes
   it scale to a large taxonomy and high call volume.

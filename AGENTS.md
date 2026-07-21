@@ -2,10 +2,10 @@
 
 **This file is your only context. Read it fully before touching anything.**
 
-Other docs in this repo (`README.md`, `docs/design-doc.md`, `POC-GUIDE.md`,
-`docs/QUICKSTART.md`) describe a finished rehearsal on a public sample corpus.
-They are useful background but describe a data path that is being **replaced**.
-Where they conflict with this file, this file wins.
+`POC-GUIDE.md` (method and lessons) and the two frozen records in `docs/`
+describe a finished rehearsal on a public sample corpus. They are useful
+background but describe a data path that is being **replaced**. Where they
+conflict with this file, this file wins.
 
 ---
 
@@ -217,9 +217,86 @@ poc ingest → poc counts → poc partition → autolabel (--skip-split test)
    → human-label the test rows → poc train → held_out_eval
 ```
 
+### Module map (`trainer/semantic_poc/`)
+
+| Role | Modules |
+|---|---|
+| Contract | `schema.py` — `GoldRow`, the one type everything speaks |
+| Data in / I/O | `ingest.py` (corpus → `GoldRow`), `store.py` (gold I/O seam), `partitions.py` (splits), `paths.py`, `config.py` |
+| Featurize | `context.py` (`build_c1`), `embeddings.py` (Gemini, cached), `features.py` (TF-IDF) |
+| Train | `train.py` (heads → fusion → Platt → thresholds), `fixtures.py` |
+| Serve / decide | `runtime.py` (`Scorer`), `policy.py` (`decide`), `stitch.py` |
+| Out | `artifact.py` (immutable hash-named artifact) |
+| Entry | `cli.py` (the `poc` commands) |
+
+Side tools live in `scripts/`: `serve_py.py` (inference server), `autolabel.py`
+(LLM dual-critic bulk labeling), `held_out_eval.py` (cleaned held-out number),
+`stability_report.py` (per-intent regression gate), `e2e_once.sh`,
+`first_pass.sh`.
+
 ---
 
-## 6. Config files
+## 6. Labeling and the gold store
+
+Ingest emits every turn with `labels=[]`. Labels arrive afterwards, and every
+change is audited in the same file and transaction.
+
+| Operation | How |
+|---|---|
+| Bulk LLM labeling | `python ../scripts/autolabel.py --skip-split test` — dual blind critics with opposing biases; agreements promote, `none` stays OOS, disagreements → `ambiguous` |
+| Label a batch by hand | `poc promote <intent> ids.txt` — one `conv#turn` per line. Union semantics, idempotent |
+| Fix one row exactly | `store.relabel(path, "conv#turn", labels, note)` |
+| Exclude a row | `store.mark_ambiguous(path, ids, note)` — drops it from train **and** eval |
+| Restore point | `poc snapshot --label <name>` → Parquet in `snapshots/` |
+
+The DuckDB store holds a second table, `label_audit`, appended by
+`relabel`/`promote` in the same transaction as the change — columns
+`id` (`conv#turn`), `ts`, `old_labels`, `new_labels`, `note`. History cannot
+drift from the data and no external diff file is needed.
+
+Storage tiers: `gold.duckdb` is canonical and mutable; Parquet snapshots are
+regenerable exports, **not** a second source of truth; small curated JSON
+(e.g. `test_verdicts.json`) is git-tracked eval truth.
+
+To add rows programmatically, build `GoldRow` objects and let the store handle
+ordering and atomic writes:
+
+```python
+from semantic_poc.schema import GoldRow, PrevCallerSegment
+from semantic_poc import store
+
+rows = store.load_gold("../data/gold/gold.duckdb")
+rows.append(GoldRow(conversation_id="C123", turn_index=6, timestamp_ms=...,
+                    raw_transcript="...", human_transcript="...",
+                    previous_agent_utterance="...", prev_caller_segment=None,
+                    dialog_acts=[], session_task_intent="", labels=[]))
+store.save_gold(rows, "../data/gold/gold.duckdb")   # full rewrite, row order re-derived
+```
+
+`save_gold` to a `.duckdb` path **replaces** the store and resets `label_audit`.
+Use it to build or migrate, not to append to a live store.
+
+The store maintains a hidden `_ord` column so reads are always in stable
+original order — TF-IDF fitting and the conversation-grouped CV folds are
+order-sensitive. Don't expose it in `GoldRow` and don't reuse a value.
+
+### The add-an-intent loop
+
+```
+poc promote <intent> ids.txt                          # label the batch (audited)
+poc train                                             # retrain
+python ../scripts/stability_report.py --label "added X"   # regression gate, non-zero exit on drop
+poc snapshot --label "X in"                           # restore point
+```
+
+Because heads are one-vs-rest, a turn already present as OOS is already a
+negative for every other intent — so a representative OOS pool up front keeps
+existing intents stable when new ones are added. Only same-family competitors
+shift, and only at the `decide()` policy layer.
+
+---
+
+## 7. Config files
 
 | File | Holds | Touch? |
 |---|---|---|
@@ -237,7 +314,7 @@ only the argmax survives. Currently empty.
 
 ---
 
-## 7. Context that will save you from bad suggestions
+## 8. Context that will save you from bad suggestions
 
 - **Labels are the bottleneck, not the model.** In the rehearsal, coverage went
   **0.52 → 0.92 with zero model changes**, purely by cleaning a noisy evaluation
@@ -258,17 +335,18 @@ only the argmax survives. Currently empty.
 
 ---
 
-## 8. Known inconsistency in the existing docs
+## 9. Deliberately not implemented
 
-`docs/model-design.md` and `POC-GUIDE.md` describe a **family-level fallback**
-decision ("confident it's a card issue, unsure which action"). It is **not
-implemented** — `policy.py` returns only `accepted`, `multi_accepted`,
-`abstained`, `no_supported_intent`. Do not implement it; it is a deliberately
-deferred decision.
+A **family-level fallback** decision ("confident it's a card issue, unsure which
+action") is discussed in `POC-GUIDE.md` and `docs/model-design.md` as a design
+option. It is **not implemented** — `policy.py` returns only `accepted`,
+`multi_accepted`, `abstained`, `no_supported_intent`. Do not implement it; the
+decision is deferred until there is real data showing how often "confident
+family, unsure leaf" actually occurs.
 
 ---
 
-## 9. Corpus specifics
+## 10. Corpus specifics
 
 <!-- FILL IN before starting. Describe the sample CSV: file location, one row
      per what, exact column names, how customer vs agent turns are distinguished,

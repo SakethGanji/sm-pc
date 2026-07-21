@@ -1,29 +1,28 @@
-# semantic-poc — intent-classification POC rehearsal
+# semantic-poc — non-generative intent classification
 
-Home rehearsal (design doc §14) of the Agent Assist non-generative intent
-classifier: **Python trains and serves, real Gemini embeddings throughout.**
-Data is the public HarperValleyBank corpus (1,446 bank call-center
-conversations with machine-ASR + human transcripts and dialog acts).
+Classifies one customer turn (in the context of the agent's preceding turn) into
+a fixed intent taxonomy, at a precommitted precision floor — a cheap,
+deterministic, auditable alternative to a per-utterance generative LLM call.
 
-A Go server (§5 contract, same math) is part of the original design-doc target
-architecture but has been removed from this repo for now — see
-[docs/design-doc.md](docs/design-doc.md) for the intended production shape.
-The POC serves entirely from Python (`scripts/serve_py.py`); nothing here
-depends on Go.
-
-## Pipeline
+A frozen Gemini embedding does the language understanding; everything trained is
+a stack of small linear models on top:
 
 ```
-gold rows (per caller ASR segment, weak labels from dialog acts)
-  └─ conversation-grouped time-ordered splits: train / calibration / policy / test
-train:  TF-IDF (deterministic, explicit math)  +  Gemini C1 embeddings (sqlite cache)
-        semantic OVR LR + lexical OVR LR (per-intent C, grouped folds)
-        fusion LR on out-of-fold logits  →  Platt (calibration split)
-        →  precision-floor thresholds (policy split)
-export: artifacts/artifact-poc-hvb-001-<hash8>/  (JSON + float64 .npy + fixtures)
-serve:  Python — stitcher → embedding + lexical → semantic → fusion → Platt
-        → thresholds → decision policy;  §5 request/response contract
+turn → stitch → context string → embed (frozen, cached)
+     → semantic head + lexical head → fusion → Platt calibration
+     → per-intent certified thresholds → decision policy
 ```
+
+Decisions: `accepted` · `multi_accepted` · `abstained` · `no_supported_intent`.
+Infrastructure failures return `degraded`, never a semantic decision. Every
+numeric knob lives in `configs/*.yaml`; a changed config means a new artifact.
+Raw ASR text is never cleaned.
+
+## Status
+
+Validated as a rehearsal on a public sample corpus — verdict GREEN, 0.92
+held-out coverage at the 0.90 precision floor. **Currently being ported to our
+production corpus**; the rehearsal data path is being replaced.
 
 ## Setup
 
@@ -31,44 +30,44 @@ serve:  Python — stitcher → embedding + lexical → semantic → fusion → 
 cd trainer
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .                   # registers the `poc` command
-export GEMINI_API_KEY=...          # https://aistudio.google.com/apikey
-# corpus (once): git clone https://github.com/cricketclub/gridspace-stanford-harper-valley ../data/raw/harper-valley
+pip install -e .                                 # registers the `poc` command
+export POC_GOLD_PATH=../data/gold/gold.duckdb    # every session
+export GEMINI_API_KEY=...                        # every session
 ```
 
-Requires Python 3.12 (see `trainer/.python-version`).
+Requires Python 3.12 (see `trainer/.python-version`). `pytest` from `trainer/`
+runs the unit tests — pure functions, no API key needed.
 
 ## Run
 
 ```sh
-cd trainer
-source .venv/bin/activate          # if not already active
+poc ingest        # corpus -> gold store
+poc counts        # label balance + splits. Free, no API call
+poc partition     # conversation-grouped, time-ordered splits; freezes test
+poc train         # embed -> heads -> fusion -> calibrate -> threshold -> artifact
 
-poc ingest        # HVB -> data/gold/gold.jsonl
-poc partition     # splits + manifest + frozen-test hash
-poc train         # embed (cached) -> 3 models -> calibrate -> thresholds -> artifact
-
-pytest             # unit tests, incl. stitcher
-python ../scripts/serve_py.py &     # POST /classify on :8081, loads newest artifact
-poc replay        # stream test conversations through the server,
-                  # compare with the Python offline forward pass
+python ../scripts/serve_py.py &   # POST /classify on :8081, loads newest artifact
+poc replay                        # stream test turns through it, diff vs offline
 ```
 
-Tests: `pytest` (trainer, venv activated).
-
-Decisions: `accepted | multi_accepted | no_supported_intent | abstained`;
-infrastructure failures return `degraded`, never a semantic decision.
-Every numeric knob lives in `configs/*.yaml`; changed configs or thresholds
-mean a new artifact. Raw ASR text is never cleaned.
+`poc --help` lists everything. Pipeline stages run through `poc`; side tools in
+`scripts/` run with `python`, e.g. `python ../scripts/held_out_eval.py`.
 
 ## Docs
 
-- **[docs/QUICKSTART.md](docs/QUICKSTART.md)** — zero to your first result: setup, the files to edit, commands, how much data (do-it-now, start here).
-- **[POC-GUIDE.md](POC-GUIDE.md)** — the build/port guide: method, data, scaling, rollout (the *why*).
-- **[docs/model-design.md](docs/model-design.md)** — how the model works: the layers, how each is trained, a worked example.
-- **[docs/gold-schema.md](docs/gold-schema.md)** — gold DuckDB schema + how to add/label rows (the data contract).
-- **[trainer/README.md](trainer/README.md)** — package map + how to run (`poc` vs scripts).
-- **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — the rehearsal's result (GREEN, 0.92 held-out) + caveats.
-- **[docs/design-doc.md](docs/design-doc.md)** — the original work spec this rehearses.
+**[AGENTS.md](AGENTS.md)** — start here. Operational truth: architecture, the
+`GoldRow` data contract, the port task, setup, commands, labeling lifecycle, and
+the rules that must not be broken.
 
-Serve: `cd trainer && source .venv/bin/activate && python ../scripts/serve_py.py`.
+**[POC-GUIDE.md](POC-GUIDE.md)** — the method: how much data and of what, the
+labeling standard, splits hygiene, certification, scaling to ~50 intents,
+rollout, and the checklist of things the rehearsal tripped on.
+
+**[docs/model-design.md](docs/model-design.md)** — how the model works, layer by
+layer, with a worked example.
+
+Frozen historical records, kept as evidence and never updated:
+**[docs/design-doc.md](docs/design-doc.md)** (the original spec, including the
+precision floor committed before any result was seen) and
+**[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** (what was
+measured, and the ceilings that were ruled out).

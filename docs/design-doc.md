@@ -3,6 +3,10 @@
 
 **Document status:** Final for Part 1 implementation. Self-contained — no prior design docs required.
 
+> **Frozen record — do not edit.** Kept as evidence of the problem statement,
+> scope decisions, and the precision floor as committed *before* any result was
+> seen. Current operational truth is `AGENTS.md`.
+
 > Note: this repo is the §14 rehearsal track of this document — same pipeline
 > mechanics on the public HarperValleyBank corpus, real Gemini embeddings as
 > the provider, Python trainer + Go server. Scope per project decisions: the

@@ -28,7 +28,7 @@ Spend top-down by that first column. Everything below serves it.
 
 The unit of prediction is **one customer turn, in context** (the preceding agent
 utterance). One row per customer turn. Full schema — every column, types,
-examples, how to add rows to the store — is **`docs/gold-schema.md`**; the field
+examples, how to add rows to the store — is in **`AGENTS.md`**; the field
 intuitions that trip people up:
 
 - **`raw_transcript` — never clean it.** You serve on raw ASR, so you train and
@@ -94,7 +94,7 @@ eval-label artifact.
 
 **How labels land in this codebase:** ingest emits every turn with `labels=[]`
 into `gold.duckdb`; you promote the request turns with `poc promote <intent>
-<ids.txt>` (batched, audited in-file). See `docs/gold-schema.md`.
+<ids.txt>` (batched, audited in-file). See `AGENTS.md` §6.
 
 ## 4. Splits and hygiene — how to not fool yourself
 
@@ -123,7 +123,7 @@ raw turn + prev agent turn
   → fusion:         small linear model over [semantic ∥ lexical ∥ meta] logits
   → calibration:    per-intent Platt scaling (scores → real probabilities)
   → thresholds:     per-intent cut certified to hold the precision floor
-  → decision policy: floors + abstain + family fallback + exclusive groups
+  → decision policy: floors + abstain + exclusive groups
 ```
 
 - **One embedding call per turn**, regardless of intent count (8 or 50 or 200 =
@@ -173,9 +173,12 @@ you need that specific analysis.
 ## 8. Decision policy and safety nets — never confidently mislead
 
 A confident wrong answer is worse than silence. Build in:
-- **Three no-accept outcomes:** `no_supported_intent` (nothing relevant),
-  `abstained` (something's here, not sure enough), and a **family-level fallback**
-  (confident it's a *card* issue, unsure which action).
+- **Two no-accept outcomes, implemented:** `no_supported_intent` (nothing
+  relevant) and `abstained` (something's here, not sure enough).
+- **A family-level fallback** (confident it's a *card* issue, unsure which
+  action) is a design option, **not implemented**. Deferred until real data shows
+  how often "confident family, unsure leaf" actually occurs — measure the family
+  composition of the abstain bucket before building it.
 - **Abstain on genuine ambiguity** — a non-generative classifier can't resolve "did
   you mean replace or unlock?"; the correct move is a calibrated abstain + hand-off.
 - **Exclusive groups / argmax within a family** so siblings don't both fire.
@@ -259,8 +262,8 @@ support. Absent that signal, the cheap stack wins — don't spend the money.
 
 **Almost none of the code.** Training, calibration, thresholding, decision policy,
 serving, and the store are all dataset-agnostic. You rewrite **one adapter** and
-edit **a few configs**. Full detail: `docs/gold-schema.md` (data contract + how to
-add/label rows) and `trainer/README.md` (module map + how to run). The map:
+edit **a few configs**. Full detail: `AGENTS.md` (data contract, how to add and
+label rows, module map, how to run). The map:
 
 - **`trainer/semantic_poc/ingest.py`** — the one rewrite: read your CSV → one
   `GoldRow` per customer turn, `labels=[]`. (Its header spells out the contract.)

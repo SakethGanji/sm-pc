@@ -1,5 +1,9 @@
 # Feasibility verdict — can linear-over-frozen-Gemini reach very high performance?
 
+> **Frozen record — do not edit.** Results measured during the rehearsal phase on
+> a public sample corpus. Kept as evidence of what was tested and concluded, at
+> the time it was concluded. Current operational truth is `AGENTS.md`.
+
 Session 2026-07-15 (part 2). Precommitted target: **75% coverage at the 0.90
 precision floor** (user delegated the number; 0.90 floor per §3 discipline).
 Everything below is reported against that target.

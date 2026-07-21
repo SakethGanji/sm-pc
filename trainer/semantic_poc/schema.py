@@ -1,7 +1,7 @@
 """The data contract. `GoldRow` is the ONE type the whole pipeline speaks —
 ingest emits it, the store persists it, training/serving consume it. Nothing
 downstream knows where the data came from; it only sees GoldRows. Full column
-definitions, types, and examples live in ../docs/gold-schema.md."""
+definitions, types, and examples live in ../../AGENTS.md §3."""
 
 from pydantic import BaseModel
 
