@@ -2,10 +2,10 @@
 
 **This file is your only context. Read it fully before touching anything.**
 
-`POC-GUIDE.md` (method and lessons) and the two frozen records in `docs/`
-describe a finished rehearsal on a public sample corpus. They are useful
-background but describe a data path that is being **replaced**. Where they
-conflict with this file, this file wins.
+`docs/method-guide.md` (method and lessons) and `docs/model-design.md` (how the
+model works) were written during a finished rehearsal on a public sample corpus.
+They are useful background but describe a data path that is being **replaced**.
+Where they conflict with this file, this file wins.
 
 ---
 
@@ -338,7 +338,7 @@ only the argmax survives. Currently empty.
 ## 9. Deliberately not implemented
 
 A **family-level fallback** decision ("confident it's a card issue, unsure which
-action") is discussed in `POC-GUIDE.md` and `docs/model-design.md` as a design
+action") is discussed in `docs/method-guide.md` and `docs/model-design.md` as a design
 option. It is **not implemented** — `policy.py` returns only `accepted`,
 `multi_accepted`, `abstained`, `no_supported_intent`. Do not implement it; the
 decision is deferred until there is real data showing how often "confident

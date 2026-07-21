@@ -1,6 +1,6 @@
 """LLM auto-labeler — dual blind critics over unlabeled turns in gold.duckdb.
 
-The accelerator from POC-GUIDE §3, wired to the DuckDB store. For each unlabeled
+The accelerator from docs/method-guide.md §3, wired to the DuckDB store. For each unlabeled
 turn it asks TWO Gemini critics with opposing biases (one precision-lean, one
 recall-lean) what the customer is requesting, then:
   - both agree on an intent   -> promote that intent onto the turn (audited)

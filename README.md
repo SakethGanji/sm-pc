@@ -59,15 +59,9 @@ poc replay                        # stream test turns through it, diff vs offlin
 `GoldRow` data contract, the port task, setup, commands, labeling lifecycle, and
 the rules that must not be broken.
 
-**[POC-GUIDE.md](POC-GUIDE.md)** — the method: how much data and of what, the
-labeling standard, splits hygiene, certification, scaling to ~50 intents,
-rollout, and the checklist of things the rehearsal tripped on.
+**[docs/method-guide.md](docs/method-guide.md)** — the method: how much data and
+of what, the labeling standard, splits hygiene, certification, scaling to ~50
+intents, rollout, and the checklist of things the rehearsal tripped on.
 
 **[docs/model-design.md](docs/model-design.md)** — how the model works, layer by
 layer, with a worked example.
-
-Frozen historical records, kept as evidence and never updated:
-**[docs/design-doc.md](docs/design-doc.md)** (the original spec, including the
-precision floor committed before any result was seen) and
-**[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** (what was
-measured, and the ceilings that were ruled out).
