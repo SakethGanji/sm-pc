@@ -63,11 +63,10 @@ mean a new artifact. Raw ASR text is never cleaned.
 
 ## Docs
 
-- **[POC-GUIDE.md](POC-GUIDE.md)** — build it on your own data (start here).
-- **[docs/office-playbook.md](docs/office-playbook.md)** — the full method + reasoning.
-- **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — this rehearsal's result (GREEN, 0.92 held-out).
-- **[docs/design-doc.md](docs/design-doc.md)** — the work spec this rehearses.
-- **[docs/gold-schema.md](docs/gold-schema.md)** — gold DuckDB schema + how to add/label rows (start here for the port).
-- [docs/synthetic-data-plan.md](docs/synthetic-data-plan.md) — record of the synthetic-data experiment (tried, null result, dropped).
+- **[POC-GUIDE.md](POC-GUIDE.md)** — the build/port guide: method, data, scaling, rollout (start here).
+- **[docs/gold-schema.md](docs/gold-schema.md)** — gold DuckDB schema + how to add/label rows (the data contract).
+- **[trainer/README.md](trainer/README.md)** — package map + how to run (`poc` vs scripts).
+- **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — the rehearsal's result (GREEN, 0.92 held-out) + caveats.
+- **[docs/design-doc.md](docs/design-doc.md)** — the original work spec this rehearses.
 
 Serve: `cd trainer && source .venv/bin/activate && python ../scripts/serve_py.py`.
