@@ -65,6 +65,7 @@ mean a new artifact. Raw ASR text is never cleaned.
 
 - **[docs/QUICKSTART.md](docs/QUICKSTART.md)** — zero to your first result: setup, the files to edit, commands, how much data (do-it-now, start here).
 - **[POC-GUIDE.md](POC-GUIDE.md)** — the build/port guide: method, data, scaling, rollout (the *why*).
+- **[docs/model-design.md](docs/model-design.md)** — how the model works: the layers, how each is trained, a worked example.
 - **[docs/gold-schema.md](docs/gold-schema.md)** — gold DuckDB schema + how to add/label rows (the data contract).
 - **[trainer/README.md](trainer/README.md)** — package map + how to run (`poc` vs scripts).
 - **[docs/feasibility-verdict.md](docs/feasibility-verdict.md)** — the rehearsal's result (GREEN, 0.92 held-out) + caveats.
