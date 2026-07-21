@@ -486,8 +486,10 @@ L2-normalization. If you use Gemini, change nothing here.
 
 ```
 cd trainer && source .venv/bin/activate   # see README.md Setup
-poc ingest        # your adapter -> data/gold/gold.jsonl
-# --- your labeling / adjudication pass fills in labels here ---
+export POC_GOLD_PATH=../data/gold/gold.duckdb   # canonical store — schema in docs/gold-schema.md
+poc ingest        # your adapter -> gold.duckdb (labels blank)
+poc counts        # intent balance / OOS pile
+poc promote <intent> ids.txt   # label a batch (audited); repeat per intent
 poc partition     # conversation-grouped time-ordered splits + frozen-test hash
 poc train         # embed (cached) -> heads -> fusion -> calibrate -> threshold -> artifact
 pytest             # unit tests, incl. the stitcher
@@ -497,22 +499,26 @@ poc replay        # sanity-check online vs offline agree
 
 ### The diagnostic + labeling scripts, mapped to this doc
 
-These are reference implementations — reuse them, pointed at your data:
+Kept in this repo, pointed at your data:
 
-- **§3 labeling/adjudication** — the dual-blind-critic method. In the rehearsal
-  it ran as an agent workflow (`scripts/adj_prep.py` builds the batches,
-  `scripts/adj_apply.py` applies the verdicts). Port the *method*; your critic
-  runner will differ.
-- **§7 diagnostics** — `scripts/ceilings.py` (representation AUC/AP, ASR ceiling,
-  certification), `scripts/fp_audit.py` (the mislabel audit that cracked the
-  rehearsal), `scripts/miss_analysis.py` (per-miss breakdown).
 - **§6 honest scoring** — `scripts/held_out_eval.py` (held-out coverage at the
-  floor, per intent).
-- **§10 challenger** — fine-tuned-encoder head-to-head. Removed from this repo
-  (it needed a separate `challenger-env/` with torch/transformers and didn't
-  clear the bar — see `docs/feasibility-verdict.md`); recover it from git
-  history (`scripts/challenger.py`) if you want to rerun that comparison.
-- **ASR robustness** — `scripts/asr_damage.py` (catch rate vs ASR damage level).
+  floor, per intent) and `scripts/stability_report.py` (per-intent metrics tracked
+  run-over-run; the regression gate as you add intents).
+- **labeling** — `poc promote` / `store.relabel` write labels into `gold.duckdb`
+  with an in-file audit trail; `poc counts` / `poc snapshot` for balance and
+  restore points. Full flow in `docs/gold-schema.md`.
+
+Kept only in git history (rehearsal-era harnesses — recover a file if you want to
+rerun that specific analysis):
+
+- **§3 labeling/adjudication** — the dual-blind-critic method ran as an agent
+  workflow (`adj_prep.py` built the batches, `adj_apply.py` applied the verdicts);
+  bootstrap stubs lived in `port-template/`. Port the *method*; your runner differs.
+- **§7 diagnostics** — `ceilings.py` (representation AUC/AP, ASR ceiling,
+  certification), `fp_audit.py` (the mislabel audit that cracked the rehearsal),
+  `miss_analysis.py` (per-miss breakdown), `asr_damage.py` (catch rate vs ASR damage).
+- **§10 challenger** — `challenger.py` fine-tuned-encoder head-to-head (needed a
+  separate `challenger-env/`; didn't clear the bar — see `docs/feasibility-verdict.md`).
 
 ### Reproduce our *result*, not our numbers
 
@@ -530,9 +536,9 @@ your data, per intent.*
 - [ ] Replaced `taxonomy.yaml` with your intents + families.
 - [ ] Set `policy.yaml` (floor, accept_floor, exclusive_groups).
 - [ ] Pointed `embedding.yaml` (and provider code, if not Gemini) at your embedder.
-- [ ] Ran your labeling/adjudication pass to fill `labels` (not weak heuristics).
+- [ ] Ran your labeling pass to fill `labels` (`poc promote`; not weak heuristics).
 - [ ] `poc partition` → `poc train` → `pytest` green on your data.
-- [ ] Ran §7 diagnostics before trusting or upgrading anything.
+- [ ] `held_out_eval.py` for the per-intent number; `stability_report.py` as you add intents.
 
 ---
 

@@ -48,11 +48,13 @@ Unit that matters: **positives per sub-intent, from many different conversations
 | `raw_transcript` | **Yes** | customer ASR text — **never cleaned** |
 | `previous_agent_utterance` | **Yes** | agent's line just before; `""` if none |
 | `human_transcript` | recommended | corrected text; copy raw if you don't have it |
-| `labels` | leave blank | filled by the critic pass (intent name, or empty = negative) |
+| `labels` | leave blank | filled by your labeling pass (`poc promote`); intent name, or empty = negative |
 | `session_task_intent` | optional | your prod tag can seed it (weak hint only) |
 | `split` | **don't add** | the pipeline assigns train/cal/policy/test |
 
-Minimum = the 5 **Yes** columns + blank `labels`.
+Minimum = the 5 **Yes** columns + blank `labels`. Full schema (every column,
+types, the `prev_caller_segment` struct, how to add/label rows in DuckDB):
+**`docs/gold-schema.md`**.
 
 ## Labeling (don't hand-label 5k)
 
@@ -71,7 +73,7 @@ family AND scopes the sub-labeling to ~7–10 options), let critics still flag
 
 ## One dataset → four splits (automatic)
 
-You build **one** `gold.jsonl`. `poc partition` splits it into
+You build **one** store (`gold.duckdb`). `poc partition` splits it into
 train / calibration / policy / test — by whole conversation, time-ordered, test
 frozen + hashed. Don't make four files; don't balance it (training auto-handles
 imbalance; eval keeps the natural ratio).
@@ -87,14 +89,18 @@ imbalance; eval keeps the natural ratio).
 
 ```
 cd trainer && source .venv/bin/activate    # see README.md Setup if this venv doesn't exist yet
-python ../port-template/smoke_test.py     # prove the machine
-# rewrite ingest.py for your data; fill taxonomy.yaml + policy.yaml
-poc ingest        # your data -> gold.jsonl (labels blank)
-# ... critic labeling pass fills labels ...
+export POC_GOLD_PATH=../data/gold/gold.duckdb   # canonical store (docs/gold-schema.md)
+bash ../scripts/e2e_once.sh               # prove the machine end-to-end
+# rewrite ingest.py for your CSV; fill taxonomy.yaml + policy.yaml
+poc ingest        # your data -> gold.duckdb (labels blank)
+poc counts        # check intent balance / OOS pile
+poc promote <intent> ids.txt   # label a batch (audited); repeat per intent
 poc partition     # auto-split, freeze test
 poc train         # embed(cached) -> heads -> calibrate -> threshold -> artifact
-python ../scripts/serve_py.py --port 8081               # SERVE (Python-only, no Go)
-python ../scripts/held_out_eval.py <artifact>           # per-intent result
+python ../scripts/serve_py.py --port 8081                        # SERVE (Python-only, no Go)
+python ../scripts/held_out_eval.py                              # per-intent result
+python ../scripts/stability_report.py --label "added <intent>"  # regression gate as you add intents
+poc snapshot --label "<intent> in"                             # Parquet restore point
 ```
 
 ## Locked design decisions (from planning)
@@ -122,22 +128,24 @@ python ../scripts/held_out_eval.py <artifact>           # per-intent result
 - **No changes:** train / calibrate / threshold / serve (Python), stitching,
   accept-floor guard, imbalance handling, conversation-grouped splits, all
   diagnostics.
-- **You build (fill-ins):** the `ingest.py` adapter, the critic runner
-  (`port-template/bootstrap_labels.py` step 2), the two config files.
+- **You build (fill-ins):** the `ingest.py` CSV adapter, your labeling pass
+  (`poc promote` into the store; the automated dual-critic runner is recoverable
+  from git history if you want it at scale), the two config files.
 - **Optional, not for the POC:** main→sub fallback, a Go server for production
   latency (same artifact, no retrain — not part of this repo right now), the
   LLM rewrite path, the token-window widening (add these as your data demands).
 
 ## Your first week
 
-- **Day 1** — smoke test → prove the machine. Rewrite `ingest.py`; `poc ingest`;
-  eyeball `gold.jsonl`.
-- **Day 2–3** — hand-label ~200 turns across your top intents + negatives (your
-  seed and your feel for the guide).
+- **Day 1** — `bash scripts/e2e_once.sh` → prove the machine. Rewrite `ingest.py`;
+  `poc ingest`; eyeball the store (`poc counts`, or query `gold.duckdb`).
+- **Day 2–3** — label ~200 turns across your top intents + negatives (`poc promote`);
+  your seed and your feel for the guide.
 - **Day 3** — fill configs; `poc partition` + `poc train`; a thin first artifact.
-- **Day 4** — run diagnostics (`ceilings.py`, `fp_audit.py`, `held_out_eval.py`);
-  read whether gaps are label / audio / model.
-- **Day 5** — stand up the critic loop (`bootstrap_labels.py`) and scale labeling.
+- **Day 4** — `held_out_eval.py` for the per-intent number; read whether gaps are
+  label / audio / model.
+- **Day 5** — scale labeling one intent at a time; `stability_report.py` after each
+  add to catch regressions.
 
 ## Done looks like
 
