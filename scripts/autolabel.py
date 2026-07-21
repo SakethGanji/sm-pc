@@ -84,8 +84,13 @@ def main(argv):
     ap.add_argument("--limit", type=int, default=0, help="cap turns (0 = all unlabeled)")
     ap.add_argument("--batch", type=int, default=15, help="turns per critic call")
     ap.add_argument("--model", default="gemini-2.5-flash")
+    ap.add_argument("--skip-split", default="",
+                    help="comma-sep splits to leave untouched, e.g. 'test' or 'test,policy'. "
+                         "Run `poc partition` FIRST, then the LLM never labels your eval set "
+                         "(you human-label those). Empty = label everything (verify eval after).")
     ap.add_argument("--dry-run", action="store_true", help="report, don't write")
     args = ap.parse_args(argv)
+    skip = {s.strip() for s in args.skip_split.split(",") if s.strip()}
 
     gold = Path(os.environ.get("POC_GOLD_PATH", GOLD_DIR / "gold.duckdb"))
     if gold.suffix != ".duckdb":
@@ -93,10 +98,14 @@ def main(argv):
     valid = set(load_config("taxonomy")["intents"])
     tax_lines = _taxonomy_lines(load_config("taxonomy"))
 
-    # unlabeled, non-ambiguous turns (split is unset pre-partition — we label all of them)
+    # Unlabeled, non-ambiguous turns. With --skip-split (after `poc partition`),
+    # the named splits are left for humans — the LLM never touches your eval answer key.
     todo = [(f"{r.conversation_id}#{r.turn_index}",
              {"agent": r.previous_agent_utterance, "customer": r.raw_transcript})
-            for r in store.iter_gold(gold) if not r.labels and not r.ambiguous]
+            for r in store.iter_gold(gold)
+            if not r.labels and not r.ambiguous and r.split not in skip]
+    if skip:
+        print(f"skipping split(s) {sorted(skip)} — label those by hand (eval integrity)")
     if args.limit:
         todo = todo[:args.limit]
     if not todo:

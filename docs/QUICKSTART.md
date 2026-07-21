@@ -48,9 +48,15 @@ python ../scripts/autolabel.py --dry-run --limit 50   # preview: agreement rate 
 python ../scripts/autolabel.py                # apply to all unlabeled turns
 poc counts                                    # positives per intent + OOS should populate
 ```
-Guardrails: LLM labels are a first pass, not truth — **spot-check them, and after
-`poc partition` HUMAN-VERIFY the test-split positives** (never trust an auto-labeled
-eval set). Adding a one-line `desc:` per intent in `taxonomy.yaml` improves accuracy.
+Guardrails: LLM labels are a first pass, not truth — spot-check them, and **never
+trust an auto-labeled eval set.** Two ways to keep the eval honest (pick one):
+- **verify-after** (less work): label everything → `poc partition` → human-check the
+  `test` rows' labels.
+- **skip-eval** (purest): `poc partition` **first**, then
+  `python ../scripts/autolabel.py --skip-split test` so the LLM never touches the
+  answer key → you hand-label the `test` rows.
+
+Adding a one-line `desc:` per intent in `taxonomy.yaml` improves accuracy.
 
 **B. Manual promote (small / targeted).** Pull the calls tagged with an intent,
 write the request turns' ids (`conversation_id#turn_index`, one per line) to
