@@ -222,9 +222,12 @@ Example of a negative and a positive row:
    be invoked with `--skip-split test`. The test split is the only honest number
    this project will produce. An LLM that writes labels onto test rows destroys it
    silently and unrecoverably.
-5. **Ingest the WHOLE corpus before `poc partition` runs.** Partition freezes the
-   test set by time. Ingesting more data later and re-partitioning changes the
-   test set and voids the "touched once" guarantee.
+5. **Ingest the whole WORKING SAMPLE before `poc partition` runs** — see §11.
+   The working sample is a deliberately chosen subset of a much larger pool, and
+   it must be settled before partitioning: partition freezes the test set by
+   time, so ingesting more later and re-partitioning changes the test set and
+   voids the "touched once" guarantee. **Do not ingest the full pool** — §11
+   explains why that actively corrupts the labels.
 6. **Never invent, infer, or synthesize labels** to make a step run or a number
    look better. `labels: []` is meaningful data, not a missing value.
 7. **Do not evaluate against the test split while iterating.** Use `calibration`
@@ -510,3 +513,65 @@ you report the counts output plus 3 sample `GoldRow`s and the checks above.
 Expected shape of a correct first run: `total` = number of customer turns,
 `oos` ≈ `total`, `labeled` = 0, and the intents from `taxonomy.yaml` listed with
 zero positives. Stop there and report before anything else runs.
+
+---
+
+## 11. Working sample vs. the full pool
+
+Our available data is far larger than what this pipeline should ingest —
+hundreds of thousands of conversations across several daily report feeds, i.e.
+millions of customer turns. **Do not ingest all of it.** The gold store holds a
+deliberately chosen **working sample**; the rest stays a pool to draw from
+later.
+
+### Why, and it is not about cost
+
+There is no "unlabeled" state in this schema. `labels=[]` means **"no actionable
+intent"** — a confirmed negative that teaches the model to stay silent.
+`ambiguous` is the only "unknown," and it removes a row from training *and*
+eval.
+
+So ingesting millions of turns and labeling tens of thousands does not leave the
+remainder inert. Every unlabeled row becomes a **confirmed negative**, including
+every genuine request among them. That trains the model that real requests are
+non-requests, at enormous volume. It is the same evaluation-label-noise failure
+that held the rehearsal at 0.52 coverage (§8), except deliberately and at scale.
+
+Cost is the secondary reason: `poc train` embeds **every row** in the train,
+calibration, and policy splits, whether or not it was ever labeled. Ingest size
+sets the embedding bill directly.
+
+### Size the sample from what must be certified
+
+Work backwards from the certification requirement, not forward from what is
+available:
+
+- ~300 adjudicated positives per intent → a solid per-intent number; ~150 → a
+  first real one; below ~30 the metric is meaningless
+- test is ~10% of a conversation-grouped split, so ~300 positives puts ~30 in
+  test — roughly the minimum to certify a precision floor
+- multiply by intent count, divide by the request-turn rate, then add a
+  representative pool of non-request turns
+
+This normally lands in the low thousands of conversations, not hundreds of
+thousands. A balanced 5k turns beats a lopsided 50k — and a lopsided 10M is
+actively harmful for the reason above.
+
+### How to draw it
+
+- **Sample whole conversations, never individual turns.** Partial calls break
+  `previous_agent_utterance` context and the conversation-grouping guarantee.
+- **Stratify across every report feed and across days**, so the model does not
+  fit one feed's mix or one day's quirks.
+- **Oversampling conversations likely to contain rare intents is fine** for the
+  training portion — but keep a separate, unstratified random slice as the
+  honest evaluation sample, or the coverage number measures the sampling
+  strategy rather than reality.
+- **Keep the full pool in its own store**, not the gold store. Its value comes
+  later: run the trained model across it, collect family-internal false
+  positives and near-misses, and label those. Per label, that is worth far more
+  than random sampling.
+
+If asked to ingest "everything," or if the provided sample appears to be the
+full pool rather than a chosen subset, **stop and confirm** before running
+`poc ingest`.
