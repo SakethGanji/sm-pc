@@ -1,0 +1,30 @@
+Read AGENTS.md at the repo root completely before doing anything. It is your
+primary context; where any other doc in this repo conflicts with it, AGENTS.md
+wins.
+
+Do section 3 only — the ingest port. Six files change, listed there with line
+numbers. Do not touch anything else; if a change seems to need train.py,
+policy.py, runtime.py, features.py, or store.py, stop and tell me.
+
+Follow every rule in section 4. The ones most likely to matter:
+- You have no embedding or LLM access. That is an environment limit, not a
+  permission to request. Never fake, stub, or mock the embedding layer to get
+  further — see section 3, "How far you can validate."
+- Never run `poc train` or scripts/autolabel.py.
+- Every row must come out of ingest with labels: [] — that is correct, not a
+  gap to fill. Do not invent labels.
+- Never clean raw_transcript. No normalizing, punctuating, or spellfixing.
+
+Read section 11 before you ingest anything. The CSV I give you is a working
+sample drawn from a much larger pool, not the full corpus. If what you receive
+looks like the whole pool, stop and ask.
+
+Start by inspecting the sample and working through the table in section 10 —
+establish every item there. Then show me your proposed field-by-field mapping
+onto GoldRow and say which fields you inferred versus which you were told. Do
+not write code until I confirm the mapping. Guessing on speaker identification,
+timestamp units, or conversation boundaries produces a pipeline that runs and is
+silently wrong.
+
+Stop at the definition of done at the end of section 10: `poc ingest && poc
+counts` clean, plus the self-checks listed there. Report and wait.
